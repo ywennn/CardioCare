@@ -9,44 +9,27 @@ export const shorthands = undefined;
  * @returns {Promise<void> | void}
  */
 export const up = (pgm) => {
-  pgm.createType('user_role', ['admin', 'user']);
-  pgm.createTable('users', {
+  pgm.createTable('permissions', {
     id: {
-      type: 'VARCHAR(50)',
+      type: 'varchar(36)',
       primaryKey: true,
-    },
-    'full-name': {
-      type: 'VARCHAR(100)',
       notNull: true,
     },
-    username: {
-      type: 'VARCHAR(50)',
-      notNull: true,
-    },
-    'birth-date': {
-      type: 'DATE',
-      notNull: true,
-    },
-    email: {
-      type: 'VARCHAR(100)',
+    name: {
+      type: 'varchar(100)',
       notNull: true,
       unique: true,
     },
-    password: {
-      type: 'TEXT',
-      notNull: true,
+    description: {
+      type: 'text',
     },
-    role: {
-      type: 'role',
+    code: {
+      type: 'varchar(100)',
       notNull: true,
+      unique: true,
     },
     created_at: {
-      type: 'TIMESTAMP',
-      notNull: true,
-      default: pgm.func('current_timestamp'),
-    },
-    updated_at: {
-      type: 'TIMESTAMP',
+      type: 'timestamp',
       notNull: true,
       default: pgm.func('current_timestamp'),
     },
@@ -59,5 +42,5 @@ export const up = (pgm) => {
  * @returns {Promise<void> | void}
  */
 export const down = (pgm) => {
-  pgm.dropTable('users');
+  pgm.dropTable('permissions');
 };

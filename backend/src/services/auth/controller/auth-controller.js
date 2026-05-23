@@ -8,16 +8,31 @@ import {
 } from '../../../exceptions/index.js';
 
 export const login = async (req, res, next) => {
-  const { email, password } = req.validated;
-  const userId = await userRepositories.verifyCredential(email, password);
-  if (!userId) {
-    return next(new AuthenticationError('Kredensial yang Anda berikan salah'));
-  }
-  const accessToken = TokenManager.generateAccessToken({ id: userId });
-  const refreshToken = TokenManager.generateRefreshToken({ id: userId });
-  await authRepositories.addRefreshToken(refreshToken);
+  try {
+    const { email, password } = req.validated;
+    const userId = await userRepositories.verifyCredential(email, password);
+    if (!userId) {
+      return next(
+        new AuthenticationError('Kredensial yang Anda berikan salah'),
+      );
+    }
 
-  return response(res, 201, 'Login berhasil', { accessToken, refreshToken });
+    const accessToken = TokenManager.generateAccessToken({ id: userId });
+    const refreshToken = TokenManager.generateRefreshToken({ id: userId });
+    const browser = req.useragent.browser || 'Unknown';
+    const os = req.useragent.os || 'Unknown';
+    const reqInfo = {
+      ipAddress: req.headers['x-forwarded-for'] || req.ip || '127.0.0.1',
+      userAgent: req.get('User-Agent') || 'Unknown',
+      deviceInfo: `${browser} on ${os}`,
+      platform: os,
+    };
+    await authRepositories.addRefreshToken(refreshToken, userId, reqInfo);
+
+    return response(res, 200, 'Login berhasil', { accessToken, refreshToken });
+  } catch (err) {
+    next(err);
+  }
 };
 
 export const refreshToken = async (req, res, next) => {
@@ -28,6 +43,7 @@ export const refreshToken = async (req, res, next) => {
   }
   const { id } = TokenManager.verifyRefreshToken(refreshToken);
   const accessToken = TokenManager.generateAccessToken({ id });
+  await authRepositories.putRefreshToken(refreshToken);
 
   return response(res, 200, 'Access Token berhasil diperbarui', {
     accessToken,

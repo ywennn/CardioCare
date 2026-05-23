@@ -8,13 +8,23 @@ export const shorthands = undefined;
  * @param run {() => void | undefined}
  * @returns {Promise<void> | void}
  */
-
 export const up = (pgm) => {
-  pgm.createTable('authentications', {
-    token: {
-      type: 'TEXT',
+  pgm.createTable('user_roles', {
+    user_id: {
+      type: 'varchar(36)',
       notNull: true,
+      references: 'users(id)',
+      onDelete: 'cascade',
     },
+    role_id: {
+      type: 'varchar(36)',
+      notNull: true,
+      references: 'roles(id)',
+      onDelete: 'cascade',
+    },
+  });
+  pgm.addConstraint('user_roles', 'pk_user_roles', {
+    primaryKey: ['user_id', 'role_id'],
   });
 };
 
@@ -24,5 +34,5 @@ export const up = (pgm) => {
  * @returns {Promise<void> | void}
  */
 export const down = (pgm) => {
-  pgm.dropTable('authentications');
+  pgm.dropTable('user_roles');
 };
