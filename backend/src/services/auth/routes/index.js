@@ -16,5 +16,4 @@ router.put(
   refreshToken,
 );
 router.delete('/logout', validate(deleteAuthenticationPayloadSchema), logout);
-
 export default router;

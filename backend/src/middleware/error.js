@@ -4,7 +4,12 @@ const ErrorHandler = (err, req, res, next) => {
   if (err instanceof ClientError)
     return response(res, err.statusCode, err.message, null);
   if (err.isJoi) return response(res, 400, err.details[0].message, null);
-
+  if (err.isAxiosError || err.code === 'ECONNREFUSED') {
+    return response(res, 503, 'Service unavailable', null);
+  }
+  if (err.code && err.code.startsWith('23')) {
+    return response(res, 400, 'Database error', null);
+  }
   const status = err.statusCode || err.status || 500;
   const message = err.message || 'Internal Server Error';
   console.error('Unhandled error:', err);

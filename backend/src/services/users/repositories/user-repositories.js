@@ -7,28 +7,37 @@ class UserRepositories {
     this.pool = new Pool();
   }
 
-  async addUser({ fullName, username, birthDate, email, password, role }) {
+  async addUser({ fullName, email, password }) {
     const id = `user-${nanoid(16)}`;
     const hashedPassword = await bcrypt.hash(password, 10);
     const createdAt = new Date().toISOString();
     const updatedAt = createdAt;
 
     const query = {
-      text: 'INSERT INTO users (id, "full-name", username, "birth-date", email, password, role, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id',
-      values: [
-        id,
-        fullName,
-        username,
-        birthDate,
-        email,
-        hashedPassword,
-        role,
-        createdAt,
-        updatedAt,
-      ],
+      text: 'INSERT INTO users (id, "full_name", email, password, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id',
+      values: [id, fullName, email, hashedPassword, createdAt, updatedAt],
+    };
+    const result = (await this.pool.query(query)).rows[0].id;
+    const roleId = 'r-user-002'; // role default untuk user biasa
+    await this.pool.query({
+      text: 'INSERT INTO user_roles (user_id, role_id) VALUES ($1, $2)',
+      values: [result, roleId],
+    });
+    return result;
+  }
+  async getPermissionsByUserId(userId) {
+    const query = {
+      text: `
+      SELECT DISTINCT p.code 
+      FROM user_roles ur
+      JOIN role_permissions rp ON ur.role_id = rp.role_id
+      JOIN permissions p ON rp.permission_id = p.id
+      WHERE ur.user_id = $1
+    `,
+      values: [userId],
     };
     const result = await this.pool.query(query);
-    return result.rows[0];
+    return result.rows.map((row) => row.code);
   }
   async verifyAvailableEmail(email) {
     const query = {
@@ -44,7 +53,7 @@ class UserRepositories {
       values: [email],
     };
     const user = await this.pool.query(query);
-    if (!user) {
+    if (user.rowCount === 0) {
       return false;
     }
     const { id, password: hashedPassword } = user.rows[0];
@@ -53,6 +62,55 @@ class UserRepositories {
       return false;
     }
     return id;
+  }
+  async getMeById(userId) {
+    const query = {
+      text: 'SELECT id, "full_name" AS "fullName", email FROM users WHERE id = $1',
+      values: [userId],
+    };
+    const result = await this.pool.query(query);
+    if (result.rowCount === 0) {
+      return null;
+    }
+    return result.rows[0];
+  }
+
+  async putUserById(userId, { fullName, email }) {
+    const updatedAt = new Date().toISOString();
+    const query = {
+      text: 'UPDATE users SET "full_name" = $1, email = $2, updated_at = $3 WHERE id = $4 RETURNING id',
+      values: [fullName, email, updatedAt, userId],
+    };
+    const result = await this.pool.query(query);
+    if (result.rowCount === 0) {
+      return null;
+    }
+    return result.rows[0].id;
+  }
+  async putPasswordById(userId, { oldPassword, newPassword }) {
+    const query = {
+      text: 'SELECT password FROM users WHERE id = $1',
+      values: [userId],
+    };
+    const result = await this.pool.query(query);
+    if (result.rowCount === 0) {
+      return null;
+    }
+    const { password: hashedPassword } = result.rows[0];
+    const match = await bcrypt.compare(oldPassword, hashedPassword);
+    if (!match) {
+      return false;
+    }
+    const newHashedPassword = await bcrypt.hash(newPassword, 10);
+    const updateQuery = {
+      text: 'UPDATE users SET password = $1, updated_at = $2 WHERE id = $3 RETURNING id',
+      values: [newHashedPassword, new Date().toISOString(), userId],
+    };
+    const updateResult = await this.pool.query(updateQuery);
+    if (updateResult.rowCount === 0) {
+      return null;
+    }
+    return updateResult.rows[0].id;
   }
 }
 
