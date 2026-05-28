@@ -22,7 +22,7 @@ class AuthRepositories {
       ],
     };
 
-    await this.pool.query(query);
+    return await this.pool.query(query);
   }
   async putRefreshToken(token) {
     const query = {

@@ -1,7 +1,9 @@
 import axios from 'axios';
+import dotenv from 'dotenv';
 
+dotenv.config();
 const apiPredict = axios.create({
-  baseURL: 'http://0.0.0.0:8000',
+  baseURL: process.env.PREDICT_API_URL || 'http://localhost:5000',
   timeout: 5000,
 });
 

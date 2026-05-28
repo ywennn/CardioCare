@@ -36,26 +36,34 @@ export const login = async (req, res, next) => {
 };
 
 export const refreshToken = async (req, res, next) => {
-  const { refreshToken } = req.validated;
-  const result = await authRepositories.verifyRefreshToken(refreshToken);
-  if (!result) {
-    return next(new InvariantError('Refresh token tidak valid'));
-  }
-  const { id } = TokenManager.verifyRefreshToken(refreshToken);
-  const accessToken = TokenManager.generateAccessToken({ id });
-  await authRepositories.putRefreshToken(refreshToken);
+  try {
+    const { refreshToken } = req.validated;
+    const result = await authRepositories.verifyRefreshToken(refreshToken);
+    if (!result) {
+      return next(new InvariantError('Refresh token tidak valid'));
+    }
+    const { id } = TokenManager.verifyRefreshToken(refreshToken);
+    const accessToken = TokenManager.generateAccessToken({ id });
+    await authRepositories.putRefreshToken(refreshToken);
 
-  return response(res, 200, 'Access Token berhasil diperbarui', {
-    accessToken,
-  });
+    return response(res, 200, 'Access Token berhasil diperbarui', {
+      accessToken,
+    });
+  } catch (err) {
+    next(err);
+  }
 };
 
 export const logout = async (req, res, next) => {
-  const { refreshToken } = req.validated;
-  const result = await authRepositories.verifyRefreshToken(refreshToken);
-  if (!result) {
-    return next(new InvariantError('Refresh token tidak valid'));
+  try {
+    const { refreshToken } = req.validated;
+    const result = await authRepositories.verifyRefreshToken(refreshToken);
+    if (!result) {
+      return next(new InvariantError('Refresh token tidak valid'));
+    }
+    await authRepositories.deleteRefreshToken(refreshToken);
+    return response(res, 200, 'Logout berhasil');
+  } catch (err) {
+    next(err);
   }
-  await authRepositories.deleteRefreshToken(refreshToken);
-  return response(res, 200, 'Logout berhasil');
 };

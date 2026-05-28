@@ -5,3 +5,13 @@ export const userPayloadSchema = Joi.object({
   email: Joi.string().email().required(),
   password: Joi.string().min(6).required(),
 });
+
+export const userUpdatePayloadSchema = Joi.object({
+  fullName: Joi.string().required(),
+  email: Joi.string().email().required(),
+});
+
+export const userPasswordUpdatePayloadSchema = Joi.object({
+  oldPassword: Joi.string().min(6).required(),
+  newPassword: Joi.string().min(6).required(),
+});

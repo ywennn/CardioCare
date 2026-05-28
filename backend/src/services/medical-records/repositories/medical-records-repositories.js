@@ -118,38 +118,76 @@ class MedicalRecordsRepositories {
     const { rows } = await this.pool.query(query, [userId]);
     return rows;
   }
-  async detailScreeningById(screeningId) {
+  async detailScreeningById(screeningId, userId) {
     const query = `
-      SELECT 
-        h.id AS history_id, 
-        s.id AS screening_id, 
-        m.id AS monitoring_id,
-        m.age, 
-        m.gender, 
-        m.weight, 
-        m.height, 
-        m.systolic_pressure, 
-        m.diastolic_pressure,
-        m.cholesterol_level, 
-        m.glucose_level,
-        m.smoking_status, 
-        m.alcohol_status, 
-        m.activity_status,
-        h.activity, 
-        h.metadata, 
-        s.label, 
-        s.probability, 
-        s.category, 
-        s.recommendation, 
-        s.created_at
-      FROM screenings_histories h
-      JOIN screening s ON h.screening_id = s.id
-      JOIN health_monitoring m ON s.monitoring_id = m.id
-      WHERE s.id = $1;
+    SELECT ...
+    FROM screenings_histories h
+    JOIN screening s ON h.screening_id = s.id
+    JOIN health_monitoring m ON s.monitoring_id = m.id
+    WHERE s.id = $1 AND s.user_id = $2  -- tambah ini
+  `;
+    const { rows } = await this.pool.query(query, [screeningId, userId]);
+    return rows[0];
+  }
+  async deleteMedicalRecordById(screeningId, userId) {
+    const query = {
+      text: 'DELETE FROM health_monitoring WHERE id = $1 AND user_id = $2 RETURNING id',
+      values: [screeningId, userId],
+    };
+    const result = await this.pool.query(query);
+    return result.rows[0]?.id || null;
+  }
+  async summaryScreeningByUserId(userId) {
+    const query = `SELECT
+    COUNT(*)::int AS total_screenings,
+    ROUND(AVG(probability)::numeric, 2) AS average_probability,
+    COUNT(*) FILTER (WHERE category = 'BERESIKO TINGGI)::int AS high_risk_count,
+    COUNT(*) FILTER (WHERE category = 'TIDAK BERESIKO')::int AS low_risk_count,
+    (
+    SELECT category FROM screening
+    WHERE user_id = $1
+    ORDER BY created_at DESC
+    LIMIT 1
+    ) AS latest_category,
+    (
+    SELECT probability FROM screening
+    WHERE user_id = $1
+    ORDER BY created_at DESC
+    LIMIT 1
+    ) AS latest_probability
+     FROM screening
+     WHERE user_id = $1;`;
+    const { rows } = await this.pool.query(query, [userId]);
+    return rows[0];
+  }
+
+  async trendScreeningByUserId(userId, period) {
+    const intervalMap = {
+      '7d': '7 day',
+      '30d': '30 day',
+      '6m': '6 month',
+      '1y': '1 year',
+    };
+
+    const interval = intervalMap[period] || '30d';
+    const query = `
+    SELECT s.id AS screening_id,
+    DATE(created_at) AS date,
+    s.probability,
+    s.category,
+    m.systolic_pressure,
+    m.diastolic_pressure,
+    m.weight,
+    m.height
+    FROM screening s
+    JOIN health_monitoring m ON s.monitoring_id = m.id
+    WHERE s.user_id = $1
+    AND s.created_at >= NOW() - INTERVAL '${interval}'
+    ORDERED_BY s.created_at ASC
     `;
 
-    const { rows } = await this.pool.query(query, [screeningId]);
-    return rows[0];
+    const { rows } = await this.pool.query(query, [userId]);
+    return rows;
   }
 }
 

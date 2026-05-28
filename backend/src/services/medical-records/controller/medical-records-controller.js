@@ -1,5 +1,5 @@
 import medicalRecordsRepositories from '../repositories/medical-records-repositories.js';
-
+import { InvariantError } from '../../../exceptions/index.js';
 import response from '../../../utils/response.js';
 
 export const addMedicalRecord = async (req, res, next) => {
@@ -72,7 +72,7 @@ export const addMedicalRecord = async (req, res, next) => {
 
 export const getHistoriesScreeningByUserId = async (req, res, next) => {
   try {
-    const userId = req.user.id; // Ambil ID User dari middleware JWT kamu
+    const userId = req.user.id;
 
     const rawHistories =
       await medicalRecordsRepositories.historiesScreeningByUserId(userId);
@@ -85,12 +85,12 @@ export const getHistoriesScreeningByUserId = async (req, res, next) => {
       probability: parseFloat(row.probability),
     }));
 
-    return res.status(200).json({
-      code: 200,
-      status: 'success',
-      message: 'Daftar riwayat skrining berhasil diambil.',
-      data: formattedHistories,
-    });
+    return response(
+      res,
+      200,
+      'Histories screening berhasil diambil.',
+      formattedHistories,
+    );
   } catch (error) {
     next(error);
   }
@@ -99,10 +99,16 @@ export const getHistoriesScreeningByUserId = async (req, res, next) => {
 export const getDetailScreeningById = async (req, res, next) => {
   try {
     const screeningId = req.params.screeningId;
+    const userId = req.user.id;
 
-    const row =
-      await medicalRecordsRepositories.detailScreeningById(screeningId);
+    const row = await medicalRecordsRepositories.detailScreeningById(
+      screeningId,
+      userId,
+    );
 
+    if (!row) {
+      next(new InvariantError('Detail screening tidak ditemukan'));
+    }
     const genderMapping = { 1: 'Perempuan', 2: 'Laki-laki' };
     const levelMapping = {
       1: 'Normal',
@@ -167,13 +173,107 @@ export const getDetailScreeningById = async (req, res, next) => {
           : [],
       },
     };
-    return res.status(200).json({
-      code: 200,
-      status: 'success',
-      message: 'Detail skrining berhasil diambil.',
-      data: formattedResponse,
+    return response(
+      res,
+      200,
+      'Detail screening berhasil diambil.',
+      formattedResponse,
+    );
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const deleteMedicalRecordById = async (req, res, next) => {
+  try {
+    const screeningId = req.params.screeningId;
+    const userId = req.user.id;
+    const deletedId = await medicalRecordsRepositories.deleteMedicalRecordById(
+      sceeningId,
+      userId,
+    );
+    if (!deletedId) {
+      return next(new InvariantError('Screening tidak ditemukan '));
+    }
+    return response(res, 200, 'Screening berhasil dihapus', {
+      id: deletedId,
     });
   } catch (error) {
     next(error);
   }
+};
+
+export const getSummaryScreeningByUserId = async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+    const data =
+      await medicalRecordsRepositories.summaryScreeningByUserId(userId);
+    if (data.length === 0) {
+      return response(res, 200, 'Belum ada data screening untuk user ini', {
+        total_screenings: 0,
+        average_probability: 0,
+        latest_category: null,
+        latest_probability: null,
+        risk_count: { low_risk: 0, high_risk: 0 },
+      });
+    }
+    return response(res, 200, 'Summary berhasil diambil', {
+      total_screenings: data.total_screenings,
+      average_probability: parseFloat(data.average_probability),
+      latest_category: data.latest_category,
+      latest_probability: parseFloat(data.latest_probability),
+      risk_count: {
+        low_risk: data.low_risk,
+        high_risk: data.high_risk,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getTrendScreening = async (res, req, next) => {
+  try {
+    const userId = req.user.id;
+    const period = req.query.period || '30d';
+    const allowedPeriods = ['7d', '30d', '6m', '1y'];
+    if (!allowedPeriods.includes(period)) {
+      return next(
+        new InvariantError('Period tidak valid. Gunakan: 7d, 30d, 6m, atau 1y'),
+      );
+    }
+    const rows = await medicalRecordsRepositories.trendScreeningByUserId(
+      userId,
+      period,
+    );
+    const dataPoints = rows.map((row) => {
+      const heightInMeter = row.height / 100;
+      const bmi = parseFloat(
+        (row.weight / (heightInMeter * heightInMeter)).toFixed(1),
+      );
+
+      return {
+        screening_id: row.screening_id,
+        date: row.date,
+        probability: parseFloat(row.probability),
+        category: row.category,
+        blood_pressure: `${row.systolic_pressure}/${row.diastolic_pressure} mmHg`,
+        bmi,
+      };
+    });
+    let trend_direction = 'stable';
+    if (dataPoints.length >= 2) {
+      const last = dataPoints[dataPoints.length - 1].probability;
+      const prev = dataPoints[dataPoints.length - 2].probability;
+      if (last < prev - 0.05) trend_direction = 'improving';
+      else if (last > prev + 0.05) trend_direction = 'worsening';
+    }
+
+    return response(res, 200, 'Trend berhasil diambil', {
+      period,
+      total_data: dataPoints.length,
+      trend_direction,
+      data_points: dataPoints,
+    });
+  } catch (error) {}
 };
