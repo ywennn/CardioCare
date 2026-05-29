@@ -19,10 +19,7 @@ export default function RegisterPage() {
   const [error, setError] = useState("");
 
   const handleChange = (e) => {
-    setForm({
-      ...form,
-      [e.target.name]: e.target.value,
-    });
+    setForm({ ...form, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = async (e) => {
@@ -65,21 +62,25 @@ export default function RegisterPage() {
   };
 
   return (
-    <main className="min-h-screen bg-gray-100 flex flex-col items-center justify-center px-4 py-10">
-      <Link
-        to="/"
-        className="mb-8 flex items-center gap-2 text-blue-700 font-bold"
-      >
-        <HeartPulse size={24} />
-        <span>CardioCare</span>
-      </Link>
+    <main className="relative min-h-screen overflow-hidden bg-gradient-to-br from-blue-50 via-white to-blue-100 px-4 py-10 flex flex-col items-center justify-center">
+      <div className="absolute left-10 top-10 h-72 w-72 rounded-full bg-blue-300 opacity-30 blur-3xl" />
+      <div className="absolute bottom-10 right-10 h-72 w-72 rounded-full bg-cyan-300 opacity-30 blur-3xl" />
 
-      <section className="w-full max-w-md bg-white border border-gray-200 rounded-2xl p-8 shadow-sm">
+      <div className="relative z-10 mb-8 flex items-center gap-3">
+        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-700 text-white shadow-lg">
+          <HeartPulse size={28} />
+        </div>
+        <span className="text-3xl font-bold text-blue-700">
+          CardioCare
+        </span>
+      </div>
+
+      <section className="relative z-10 w-full max-w-md rounded-3xl border border-white/70 bg-white/90 p-8 shadow-xl backdrop-blur">
         <div className="mb-7">
           <h1 className="text-3xl font-bold text-gray-900">
             Buat Akun Baru
           </h1>
-          <p className="text-gray-500 mt-2">
+          <p className="mt-2 text-gray-500">
             Mulai perjalanan kesehatan jantung kamu bersama CardioCare.
           </p>
         </div>
@@ -92,7 +93,7 @@ export default function RegisterPage() {
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label className="block text-sm font-semibold text-gray-800 mb-2">
+            <label className="mb-2 block text-sm font-semibold text-gray-800">
               Nama Lengkap
             </label>
             <input
@@ -101,12 +102,12 @@ export default function RegisterPage() {
               onChange={handleChange}
               type="text"
               placeholder="Masukkan nama lengkap"
-              className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+              className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-800 mb-2">
+            <label className="mb-2 block text-sm font-semibold text-gray-800">
               Email Address
             </label>
             <input
@@ -115,12 +116,12 @@ export default function RegisterPage() {
               onChange={handleChange}
               type="email"
               placeholder="contoh@email.com"
-              className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+              className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-800 mb-2">
+            <label className="mb-2 block text-sm font-semibold text-gray-800">
               Password
             </label>
             <div className="relative">
@@ -130,12 +131,12 @@ export default function RegisterPage() {
                 onChange={handleChange}
                 type={showPassword ? "text" : "password"}
                 placeholder="Min. 6 karakter"
-                className="w-full rounded-xl border border-gray-300 px-4 py-3 pr-12 text-sm outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                className="w-full rounded-xl border border-gray-300 px-4 py-3 pr-12 text-sm outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400"
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
               >
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
@@ -143,7 +144,7 @@ export default function RegisterPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-800 mb-2">
+            <label className="mb-2 block text-sm font-semibold text-gray-800">
               Konfirmasi Password
             </label>
             <div className="relative">
@@ -153,12 +154,12 @@ export default function RegisterPage() {
                 onChange={handleChange}
                 type={showConfirmPassword ? "text" : "password"}
                 placeholder="Ulangi password"
-                className="w-full rounded-xl border border-gray-300 px-4 py-3 pr-12 text-sm outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                className="w-full rounded-xl border border-gray-300 px-4 py-3 pr-12 text-sm outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
               />
               <button
                 type="button"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400"
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
               >
                 {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
@@ -168,7 +169,7 @@ export default function RegisterPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-xl bg-blue-700 py-3 text-sm font-semibold text-white hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-70"
+            className="w-full rounded-xl bg-blue-700 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-200 transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-70"
           >
             {loading ? "Mendaftarkan..." : "Daftar Sekarang"}
           </button>
@@ -178,13 +179,13 @@ export default function RegisterPage() {
 
         <p className="text-center text-sm text-gray-500">
           Sudah punya akun?{" "}
-          <Link to="/login" className="font-semibold text-blue-700">
+          <Link to="/login" className="font-semibold text-blue-700 hover:underline">
             Masuk di sini
           </Link>
         </p>
       </section>
 
-      <p className="mt-8 text-xs text-gray-400">
+      <p className="relative z-10 mt-8 text-xs text-gray-400">
         © 2026 CardioCare. All rights reserved.
       </p>
     </main>
