@@ -1,3 +1,4 @@
+import DashboardLayout from '@/components/layout/DashboardLayout';
 import {
   Activity,
   HeartPulse,
@@ -36,6 +37,7 @@ const articles = [
 
 export default function DashboardPage() {
   return (
+  <DashboardLayout title="Dashboard">
     <main className="min-h-screen bg-slate-50 p-6">
       <div className="space-y-6">
         <section className="rounded-3xl bg-blue-700 p-8 text-white shadow-lg">
@@ -238,5 +240,6 @@ export default function DashboardPage() {
         </section>
       </div>
     </main>
+    </DashboardLayout>
   );
 }
