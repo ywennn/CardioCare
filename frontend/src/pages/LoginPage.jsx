@@ -1,127 +1,152 @@
-import NavLogo from '@/components/ui/navbar/NavLogo';
-import FormInput from '@/components/ui/form/FormInput';
-import PasswordInput from '@/components/ui/form/PasswordInput';
-import { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { Link, useNavigate } from 'react-router-dom';
-import { loginSchema } from '@/lib/validation/auth-validation';
-import { Spinner } from '@/components/ui/spinner';
-import { useAuth } from '@/hooks/useAuth';
-import { Button } from '@/components/ui/button';
-const LoginPage = () => {
-  const { login } = useAuth();
-  const navigate = useNavigate();
-  const [serverError, setServerError] = useState('');
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { Eye, EyeOff, HeartPulse } from "lucide-react";
+import api from "../services/api";
+import storage from "../utils/storage";
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-    reset,
-  } = useForm({
-    resolver: zodResolver(loginSchema),
-    defaultValues: {
-      email: '',
-      password: '',
-    },
+export default function LoginPage() {
+  const navigate = useNavigate();
+
+  const [form, setForm] = useState({
+    email: "",
+    password: "",
   });
 
-  const onSubmit = async (data) => {
-    setServerError('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+
+    if (!form.email || !form.password) {
+      setError("Email dan password wajib diisi.");
+      return;
+    }
+
     try {
-      await login(data);
-      navigate('/dashboard');
+      setLoading(true);
+
+      const res = await api.post("/auth/login", {
+        email: form.email,
+        password: form.password,
+      });
+
+      const { accessToken, refreshToken } = res.data.data;
+
+      storage.setAccessToken(accessToken);
+      storage.setRefreshToken(refreshToken);
+
+      navigate("/dashboard");
     } catch (err) {
-      const status = err?.response?.status;
-      reset({ email: '', password: '' });
-      if (status === 401) {
-        setServerError('Email atau password yang kamu masukkan salah.');
-      } else {
-        setServerError('Terjadi kesalahan. Silakan coba lagi.');
-      }
+      setError(
+        err?.response?.data?.message ||
+          "Login gagal. Periksa kembali email dan password Anda."
+      );
     } finally {
-      reset({ email: '', password: '' });
+      setLoading(false);
     }
   };
 
   return (
-    <>
-      <header className="fixed top-0 left-0 right-0 max-w-full mx-auto flex items-center justify-center border-slate-200 shadow-[0_1px_12px_rgba(37,99,235,0.07)] py-4">
-        <NavLogo size="44" height="44" text="text-[32px]" />
-      </header>
-      <section className="min-h-screen bg-slate-50 flex items-center justify-center px-4">
-        <div className="w-full max-w-md bg-white p-6 flex flex-col gap-6 mt-20 rounded-xl shadow-custom">
-          <div className="w-full">
-            <h1 className="text-2xl font-bold text-blue-600 text-center mb-0.5">
-              Welcome Back
-            </h1>
-          </div>
+    <main className="relative min-h-screen overflow-hidden bg-gradient-to-br from-blue-50 via-white to-blue-100 px-4 py-10 flex flex-col items-center justify-center">
+      <div className="absolute left-10 top-10 h-72 w-72 rounded-full bg-blue-300 opacity-30 blur-3xl" />
+      <div className="absolute bottom-10 right-10 h-72 w-72 rounded-full bg-cyan-300 opacity-30 blur-3xl" />
 
-          {serverError && (
-            <div className="flex items-start gap-2.5 px-4 py-3 rounded-lg bg-red-50 border border-red-200">
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="text-red-500 shrink-0 mt-0.5"
-              >
-                <circle cx="12" cy="12" r="10" />
-                <line x1="12" y1="8" x2="12" y2="12" />
-                <line x1="12" y1="16" x2="12.01" y2="16" />
-              </svg>
-              <p className="text-sm text-red-600">{serverError}</p>
-            </div>
-          )}
+      <Link to="/" className="relative z-10 mb-8 flex items-center gap-3">
+        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-700 text-white shadow-lg">
+          <HeartPulse size={28} />
+        </div>
+        <span className="text-3xl font-bold text-blue-700">CardioCare</span>
+      </Link>
 
-          <form
-            onSubmit={handleSubmit(onSubmit)}
-            className="flex flex-col gap-4"
-          >
-            <FormInput
-              label="Email Address"
-              id="email"
-              placeholder="example@gmail.com"
-              type="email"
-              autoComplete="email"
-              error={errors.email?.message}
-              {...register('email')}
-            />
-            <PasswordInput
-              label="Password"
-              id="password"
-              placeholder="*******"
-              autoComplete="current-password"
-              error={errors.password?.message}
-              {...register('password')}
-            />
-            <Button
-              disabled={isSubmitting ? true : false}
-              type="submit"
-              className={`bg-blue-600 mt-4 cursor-pointer`}
-            >
-              {isSubmitting ? <Spinner /> : 'Masuk'}
-            </Button>
-          </form>
-
-          <p className="text-center text-sm text-slate-500">
-            Belum punya akun?{' '}
-            <Link
-              to="/register"
-              className="text-blue-600 font-medium hover:text-blue-700 hover:underline transition-colors"
-            >
-              Daftar gratis
-            </Link>
+      <section className="relative z-10 w-full max-w-md rounded-3xl border border-white/70 bg-white/90 p-8 shadow-xl backdrop-blur">
+        <div className="mb-8 text-center">
+          <h1 className="text-3xl font-bold text-gray-900">
+            Masuk ke CardioCare
+          </h1>
+          <p className="mt-2 text-gray-500">
+            Lanjutkan monitoring kesehatan jantungmu.
           </p>
         </div>
-      </section>
-    </>
-  );
-};
 
-export default LoginPage;
+        {error && (
+          <div className="mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+            {error}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <div>
+            <label className="mb-2 block text-sm font-semibold text-gray-800">
+              Email Address
+            </label>
+            <input
+              name="email"
+              value={form.email}
+              onChange={handleChange}
+              type="email"
+              placeholder="nama@email.com"
+              className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+            />
+          </div>
+
+          <div>
+            <div className="mb-2 flex items-center justify-between">
+              <label className="block text-sm font-semibold text-gray-800">
+                Password
+              </label>
+            </div>
+
+            <div className="relative">
+              <input
+                name="password"
+                value={form.password}
+                onChange={handleChange}
+                type={showPassword ? "text" : "password"}
+                placeholder="Masukkan password"
+                className="w-full rounded-xl border border-gray-300 px-4 py-3 pr-12 text-sm outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full rounded-xl bg-blue-700 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-200 transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-70"
+          >
+            {loading ? "Masuk..." : "Masuk"}
+          </button>
+        </form>
+
+        <div className="my-7 border-t border-gray-200" />
+
+        <p className="text-center text-sm text-gray-500">
+          Belum punya akun?{" "}
+          <Link
+            to="/register"
+            className="font-semibold text-blue-700 hover:underline"
+          >
+            Daftar gratis
+          </Link>
+        </p>
+      </section>
+
+      <p className="relative z-10 mt-8 text-xs text-gray-400">
+        © 2026 CardioCare. All rights reserved.
+      </p>
+    </main>
+  );
+}

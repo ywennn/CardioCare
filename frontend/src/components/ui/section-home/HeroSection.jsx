@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 export default function HeroSection() {
   return (
     <section
@@ -22,13 +23,12 @@ export default function HeroSection() {
           </p>
 
           <div className="flex gap-4 mb-8">
-            <button className="bg-blue-700 text-white px-6 py-3 rounded-xl font-medium hover:bg-blue-800 transition">
-              Mulai Skrining Gratis
-            </button>
-
-            <button className="border border-gray-300 px-6 py-3 rounded-xl font-medium hover:bg-gray-100 transition">
-              Masuk
-            </button>
+            <Link
+            to="/login"
+            className="bg-blue-700 text-white px-6 py-3 rounded-xl font-medium hover:bg-blue-800 transition"
+          >
+          Mulai Skrining Gratis
+          </Link>
           </div>
 
           <div className="flex gap-6 text-sm text-gray-500">

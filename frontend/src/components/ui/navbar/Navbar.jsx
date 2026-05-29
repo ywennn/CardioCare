@@ -27,20 +27,20 @@ export default function Navbar() {
         </div>
 
         {/* Right Menu */}
-        <div className="flex gap-3">
+        <div className="flex items-center gap-3">
           <Link
-            to="/login"
-            className="text-sm text-blue-700 font-medium"
+             to="/login"
+             className="border border-blue-700 text-blue-700 px-5 py-2 rounded-xl text-sm font-medium hover:bg-blue-50 transition"
           >
-            Masuk
+             Masuk
           </Link>
 
-          <Link
-            to="/register"
-            className="bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-800 transition"
-          >
-            Daftar Gratis
-          </Link>
+           <Link
+             to="/register"
+             className="bg-blue-700 text-white px-5 py-2 rounded-xl text-sm font-medium hover:bg-blue-800 transition"
+           >
+             Daftar Gratis
+           </Link>
         </div>
       </div>
     </nav>
