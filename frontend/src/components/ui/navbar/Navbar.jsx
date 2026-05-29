@@ -26,7 +26,6 @@ export default function Navbar() {
           </div>
         </div>
 
-        {/* Right Menu */}
         <div className="flex items-center gap-3">
           <Link
              to="/login"
