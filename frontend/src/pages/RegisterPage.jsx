@@ -8,6 +8,7 @@ export default function RegisterPage() {
 
   const [form, setForm] = useState({
     fullName: "",
+    username: "",
     email: "",
     password: "",
     confirmPassword: "",
@@ -26,7 +27,13 @@ export default function RegisterPage() {
     e.preventDefault();
     setError("");
 
-    if (!form.fullName || !form.email || !form.password || !form.confirmPassword) {
+    if (
+      !form.fullName ||
+      !form.username ||
+      !form.email ||
+      !form.password ||
+      !form.confirmPassword
+    ) {
       setError("Semua field wajib diisi.");
       return;
     }
@@ -46,6 +53,7 @@ export default function RegisterPage() {
 
       await api.post("/users/register", {
         fullName: form.fullName,
+        username: form.username,
         email: form.email,
         password: form.password,
       });
@@ -62,7 +70,7 @@ export default function RegisterPage() {
   };
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-gradient-to-br from-blue-50 via-white to-blue-100 px-4 py-10 flex flex-col items-center justify-center">
+    <main className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-gradient-to-br from-blue-50 via-white to-blue-100 px-4 py-10">
       <div className="absolute left-10 top-10 h-72 w-72 rounded-full bg-blue-300 opacity-30 blur-3xl" />
       <div className="absolute bottom-10 right-10 h-72 w-72 rounded-full bg-cyan-300 opacity-30 blur-3xl" />
 
@@ -70,9 +78,7 @@ export default function RegisterPage() {
         <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-700 text-white shadow-lg">
           <HeartPulse size={28} />
         </div>
-        <span className="text-3xl font-bold text-blue-700">
-          CardioCare
-        </span>
+        <span className="text-3xl font-bold text-blue-700">CardioCare</span>
       </div>
 
       <section className="relative z-10 w-full max-w-md rounded-3xl border border-white/70 bg-white/90 p-8 shadow-xl backdrop-blur">
@@ -102,6 +108,20 @@ export default function RegisterPage() {
               onChange={handleChange}
               type="text"
               placeholder="Masukkan nama lengkap"
+              className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+            />
+          </div>
+
+          <div>
+            <label className="mb-2 block text-sm font-semibold text-gray-800">
+              Username
+            </label>
+            <input
+              name="username"
+              value={form.username}
+              onChange={handleChange}
+              type="text"
+              placeholder="Masukkan username"
               className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
             />
           </div>
@@ -179,7 +199,10 @@ export default function RegisterPage() {
 
         <p className="text-center text-sm text-gray-500">
           Sudah punya akun?{" "}
-          <Link to="/login" className="font-semibold text-blue-700 hover:underline">
+          <Link
+            to="/login"
+            className="font-semibold text-blue-700 hover:underline"
+          >
             Masuk di sini
           </Link>
         </p>
