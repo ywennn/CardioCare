@@ -1,58 +1,48 @@
-import { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
-import NavLogo from './NavLogo';
-import NavLinks from './NavLinks';
-import NavActions from './NavActions';
-import MobileMenuButton from './MobileMenuButton';
-import MobileMenu from './MobileMenu';
+import { Link } from "react-router-dom";
 
 export default function Navbar() {
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
-  const { pathname } = useLocation();
-
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 10);
-    window.addEventListener('scroll', onScroll);
-    return () => window.removeEventListener('scroll', onScroll);
-  }, []);
-
-  useEffect(() => {
-    const onResize = () => {
-      if (window.innerWidth >= 768) setMenuOpen(false);
-    };
-    window.addEventListener('resize', onResize);
-    return () => window.removeEventListener('resize', onResize);
-  }, []);
-
   return (
-    <>
-      <header
-        className={`fixed top-0 left-0 right-0 z-50 bg-white border-b transition-all duration-300
-          ${
-            scrolled
-              ? 'border-slate-200 shadow-[0_1px_12px_rgba(37,99,235,0.07)]'
-              : 'border-slate-100 shadow-none'
-          }`}
-      >
-        <nav className="max-w-275 mx-auto px-6 h-16 flex items-center justify-between">
-          <NavLogo />
-          <NavLinks />
-          <NavActions />
-          <MobileMenuButton
-            isOpen={menuOpen}
-            onClick={() => setMenuOpen((prev) => !prev)}
-          />
-        </nav>
+    <nav className="w-full border-b bg-white">
+      <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+        
+        {/* Left Menu */}
+        <div className="flex items-center gap-8">
+          <h1 className="text-xl font-bold text-blue-700">
+            CardioCare
+          </h1>
 
-        <MobileMenu
-          isOpen={menuOpen}
-          onClose={() => setMenuOpen(false)}
-          key={pathname}
-        />
-      </header>
+          <div className="hidden md:flex gap-6 text-sm text-gray-600">
+            <a href="#beranda" className="hover:text-blue-700">
+              Beranda
+            </a>
 
-      <div className="h-16" />
-    </>
+            <a href="#fitur" className="hover:text-blue-700">
+              Fitur
+            </a>
+
+            <a href="#faq" className="hover:text-blue-700">
+              FAQ
+            </a>
+          </div>
+        </div>
+
+        {/* Right Menu */}
+        <div className="flex gap-3">
+          <Link
+            to="/login"
+            className="text-sm text-blue-700 font-medium"
+          >
+            Masuk
+          </Link>
+
+          <Link
+            to="/register"
+            className="bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-800 transition"
+          >
+            Daftar Gratis
+          </Link>
+        </div>
+      </div>
+    </nav>
   );
 }
