@@ -1,4 +1,4 @@
-import { Link, NavLink } from 'react-router-dom';
+import { Link, NavLink, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard,
   HeartPulse,
@@ -8,6 +8,7 @@ import {
   User,
   LogOut,
 } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
 
 const navItems = [
   { label: 'Dashboard', to: '/dashboard', icon: LayoutDashboard },
@@ -19,6 +20,13 @@ const navItems = [
 ];
 
 export default function DashboardLayout({ title = 'Dashboard', children }) {
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
+
+  const handleLogout = async () => {
+    await logout();
+    navigate('/login', { replace: true });
+  };
   return (
     <div className="min-h-screen bg-slate-50">
       <aside className="fixed left-0 top-0 hidden h-screen w-60 border-r bg-white px-4 py-6 lg:flex lg:flex-col">
@@ -51,7 +59,11 @@ export default function DashboardLayout({ title = 'Dashboard', children }) {
           ))}
         </nav>
 
-        <button className="mt-auto flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-gray-600 hover:bg-red-50 hover:text-red-600">
+        <button
+          type="button"
+          onClick={handleLogout}
+          className="mt-auto flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-gray-600 hover:bg-red-50 hover:text-red-600"
+        >
           <LogOut size={18} />
           Logout
         </button>
@@ -63,11 +75,16 @@ export default function DashboardLayout({ title = 'Dashboard', children }) {
 
           <div className="flex items-center gap-4">
             <span className="hidden text-sm text-gray-500 sm:block">
-              Halo, User
+              Halo, {user?.fullName || user?.username || 'User'}
             </span>
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-100 text-blue-700">
+            
+            <Link
+              to="/profile"
+              className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-100 text-blue-700 transition hover:bg-blue-200"
+              title="Profil"
+            > 
               <User size={18} />
-            </div>
+            </Link>
           </div>
         </header>
 
