@@ -23,8 +23,11 @@
     "helmet": "^8.2.0",
     "joi": "^17.13.3",
     "jsonwebtoken": "^9.0.2",
+    "morgan": "^1.10.1",
     "nanoid": "^5.1.5",
-    "pg": "^8.16.3"
+    "pg": "^8.16.3",
+    "puppeteer": "^25.1.0",
+    "winston": "^3.19.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.34.0",

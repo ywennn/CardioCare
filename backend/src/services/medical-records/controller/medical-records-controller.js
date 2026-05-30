@@ -1,6 +1,9 @@
 import medicalRecordsRepositories from '../repositories/medical-records-repositories.js';
-import { InvariantError } from '../../../exceptions/index.js';
+import { InvariantError, NotFoundError } from '../../../exceptions/index.js';
+import generatePdfHtml from '../../../utils/generatePdf.js';
+import puppeteer from 'puppeteer';
 import response from '../../../utils/response.js';
+import fs from 'fs';
 
 export const addMedicalRecord = async (req, res, next) => {
   try {
@@ -189,7 +192,7 @@ export const deleteMedicalRecordById = async (req, res, next) => {
     const screeningId = req.params.screeningId;
     const userId = req.user.id;
     const deletedId = await medicalRecordsRepositories.deleteMedicalRecordById(
-      sceeningId,
+      screeningId,
       userId,
     );
     if (!deletedId) {
@@ -208,23 +211,47 @@ export const getSummaryScreeningByUserId = async (req, res, next) => {
     const userId = req.user.id;
     const data =
       await medicalRecordsRepositories.summaryScreeningByUserId(userId);
-    if (data.length === 0) {
+
+    if (!data || data.total_screenings === 0) {
       return response(res, 200, 'Belum ada data screening untuk user ini', {
         total_screenings: 0,
         average_probability: 0,
         latest_category: null,
         latest_probability: null,
+        first_screening_at: null,
+        last_screening_at: null,
+        streak_high_risk: 0,
+        improvement_rate: 0,
+        next_schedule: null,
         risk_count: { low_risk: 0, high_risk: 0 },
       });
     }
+
+    const firstProb = parseFloat(data.first_probability);
+    const latestProb = parseFloat(data.latest_probability);
+
+    const improvementRate =
+      firstProb > 0
+        ? parseFloat((((firstProb - latestProb) / firstProb) * 100).toFixed(2))
+        : 0;
+
+    const dayInterval = data.latest_category === 'BERISIKO TINGGI' ? 30 : 180;
+    const nextSchedule = new Date(data.last_screening_at);
+    nextSchedule.setDate(nextSchedule.getDate() + dayInterval);
+
     return response(res, 200, 'Summary berhasil diambil', {
       total_screenings: data.total_screenings,
       average_probability: parseFloat(data.average_probability),
       latest_category: data.latest_category,
-      latest_probability: parseFloat(data.latest_probability),
+      latest_probability: latestProb,
+      first_screening_at: data.first_screening_at,
+      last_screening_at: data.last_screening_at,
+      streak_high_risk: data.streak_high_risk,
+      improvement_rate: improvementRate,
+      next_schedule: nextSchedule.toISOString(),
       risk_count: {
-        low_risk: data.low_risk,
-        high_risk: data.high_risk,
+        low_risk: data.low_risk_count,
+        high_risk: data.high_risk_count,
       },
     });
   } catch (error) {
@@ -232,7 +259,7 @@ export const getSummaryScreeningByUserId = async (req, res, next) => {
   }
 };
 
-export const getTrendScreening = async (res, req, next) => {
+export const getTrendScreening = async (req, res, next) => {
   try {
     const userId = req.user.id;
     const period = req.query.period || '30d';
@@ -275,5 +302,50 @@ export const getTrendScreening = async (res, req, next) => {
       trend_direction,
       data_points: dataPoints,
     });
-  } catch (error) {}
+  } catch (error) {
+    next();
+  }
+};
+
+export const exportScreeningPdf = async (req, res, next) => {
+  try {
+    const { screeningId } = req.params;
+    const userId = req.user.id;
+    const data = await medicalRecordsRepositories.detailScreeningById(
+      screeningId,
+      userId,
+    );
+
+    if (!data) {
+      return next(new NotFoundError('Data screening tidak ditemukan'));
+    }
+
+    const html = generatePdfHtml(data);
+    const browser = await puppeteer.launch({
+      args: ['--no-sandbox', '--disable-setuid-sandbox'],
+      executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || null,
+      headless: 'new',
+    });
+    const page = await browser.newPage();
+    await page.setContent(html, { waitUntil: 'networkidle0' });
+
+    const pdf = await page.pdf({
+      format: 'A4',
+      margin: { top: '0', right: '0', bottom: '0', left: '0' },
+      printBackground: true,
+      preferCSSPageSize: false,
+      omitBackground: false,
+    });
+    await browser.close();
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="skrining-${screeningId}.pdf"`,
+    );
+    res.setHeader('Content-Length', pdf.length);
+    res.end(pdf);
+  } catch (error) {
+    console.error('PDF error:', error);
+    next(error);
+  }
 };

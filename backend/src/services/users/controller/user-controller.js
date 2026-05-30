@@ -4,7 +4,7 @@ import { InvariantError } from '../../../exceptions/index.js';
 
 export const createUser = async (req, res, next) => {
   try {
-    const { fullName, email, password } = req.validated;
+    const { fullName, userName, email, password } = req.validated;
     const isEmailAvailable = await userRepositories.verifyAvailableEmail(email);
     if (!isEmailAvailable) {
       return next(
@@ -14,6 +14,7 @@ export const createUser = async (req, res, next) => {
 
     const user = await userRepositories.addUser({
       fullName,
+      userName,
       email,
       password,
     });

@@ -12,15 +12,23 @@ import {
   userPasswordUpdatePayloadSchema,
 } from '../validator/schema.js';
 import auth from '../../../middleware/auth.js';
-
+import permissionGuard from '../../../middleware/guard.js';
+import { authLimiter } from '../../../middleware/rateLimiter.js';
 const router = Router();
 
-router.post('/register', validate(userPayloadSchema), createUser);
-router.get('/me', auth, getMe);
-router.put('/me', auth, validate(userUpdatePayloadSchema), putUser);
+router.post('/register', authLimiter, validate(userPayloadSchema), createUser);
+router.get('/me', auth, permissionGuard('profile:view'), getMe);
 router.put(
-  '/users/me/password',
+  '/me',
   auth,
+  permissionGuard('profile:update'),
+  validate(userUpdatePayloadSchema),
+  putUser,
+);
+router.put(
+  '/me/password',
+  auth,
+  permissionGuard('profile:update_password'),
   validate(userPasswordUpdatePayloadSchema),
   putPassword,
 );

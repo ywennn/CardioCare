@@ -120,43 +120,66 @@ class MedicalRecordsRepositories {
   }
   async detailScreeningById(screeningId, userId) {
     const query = `
-    SELECT ...
+    SELECT *
     FROM screenings_histories h
     JOIN screening s ON h.screening_id = s.id
     JOIN health_monitoring m ON s.monitoring_id = m.id
-    WHERE s.id = $1 AND s.user_id = $2  -- tambah ini
+    WHERE s.id = $1 AND s.user_id = $2
   `;
     const { rows } = await this.pool.query(query, [screeningId, userId]);
+    console.log('rows:', rows);
     return rows[0];
   }
   async deleteMedicalRecordById(screeningId, userId) {
     const query = {
-      text: 'DELETE FROM health_monitoring WHERE id = $1 AND user_id = $2 RETURNING id',
+      text: 'DELETE FROM screening WHERE id = $1 AND user_id = $2 RETURNING id',
       values: [screeningId, userId],
     };
     const result = await this.pool.query(query);
     return result.rows[0]?.id || null;
   }
   async summaryScreeningByUserId(userId) {
-    const query = `SELECT
-    COUNT(*)::int AS total_screenings,
-    ROUND(AVG(probability)::numeric, 2) AS average_probability,
-    COUNT(*) FILTER (WHERE category = 'BERESIKO TINGGI)::int AS high_risk_count,
-    COUNT(*) FILTER (WHERE category = 'TIDAK BERESIKO')::int AS low_risk_count,
-    (
-    SELECT category FROM screening
-    WHERE user_id = $1
-    ORDER BY created_at DESC
-    LIMIT 1
-    ) AS latest_category,
-    (
-    SELECT probability FROM screening
-    WHERE user_id = $1
-    ORDER BY created_at DESC
-    LIMIT 1
-    ) AS latest_probability
-     FROM screening
-     WHERE user_id = $1;`;
+    const query = `
+    WITH ordered AS (
+      SELECT
+        probability,
+        category,
+        created_at,
+        ROW_NUMBER() OVER (ORDER BY created_at ASC) AS rn_asc,
+        ROW_NUMBER() OVER (ORDER BY created_at DESC) AS rn_desc
+      FROM screening
+      WHERE user_id = $1
+    ),
+    streak AS (
+      SELECT COUNT(*)::int AS streak_high_risk
+      FROM (
+        SELECT category,
+               ROW_NUMBER() OVER (ORDER BY created_at DESC) AS rn,
+               ROW_NUMBER() OVER (PARTITION BY category ORDER BY created_at DESC) AS grp
+        FROM screening
+        WHERE user_id = $1
+      ) s
+      WHERE category = 'BERISIKO TINGGI'
+        AND rn = grp
+    )
+    SELECT
+      COUNT(*)::int AS total_screenings,
+      ROUND(AVG(probability)::numeric, 2) AS average_probability,
+      COUNT(*) FILTER (WHERE category = 'BERISIKO TINGGI')::int AS high_risk_count,
+      COUNT(*) FILTER (WHERE category = 'TIDAK BERISIKO')::int AS low_risk_count,
+
+      MIN(created_at) AS first_screening_at,
+      MAX(created_at) AS last_screening_at,
+
+      (SELECT category FROM ordered WHERE rn_desc = 1) AS latest_category,
+      (SELECT probability FROM ordered WHERE rn_desc = 1) AS latest_probability,
+
+      (SELECT probability FROM ordered WHERE rn_asc = 1) AS first_probability,
+
+      (SELECT streak_high_risk FROM streak) AS streak_high_risk
+    FROM screening
+    WHERE user_id = $1;
+  `;
     const { rows } = await this.pool.query(query, [userId]);
     return rows[0];
   }
@@ -169,7 +192,7 @@ class MedicalRecordsRepositories {
       '1y': '1 year',
     };
 
-    const interval = intervalMap[period] || '30d';
+    const interval = intervalMap[period] || '30 day';
     const query = `
     SELECT s.id AS screening_id,
     DATE(created_at) AS date,
@@ -183,7 +206,7 @@ class MedicalRecordsRepositories {
     JOIN health_monitoring m ON s.monitoring_id = m.id
     WHERE s.user_id = $1
     AND s.created_at >= NOW() - INTERVAL '${interval}'
-    ORDERED_BY s.created_at ASC
+    ORDER BY s.created_at ASC
     `;
 
     const { rows } = await this.pool.query(query, [userId]);

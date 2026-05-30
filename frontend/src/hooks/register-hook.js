@@ -6,7 +6,6 @@ import { useMutation } from '@tanstack/react-query';
 
 export const useRegister = () => {
   const navigate = useNavigate();
-
   return useMutation({
     mutationFn: registerUser,
     onSuccess: () => {
@@ -19,9 +18,6 @@ export const useRegister = () => {
         },
       });
       navigate('/login');
-    },
-    onError: (err) => {
-      toast.error(err.response?.data?.message || 'Register gagal');
     },
   });
 };

@@ -2,10 +2,7 @@ import { z } from 'zod';
 
 export const loginSchema = z.object({
   email: z.string().min(1, 'Email Wajib diisi'),
-  password: z
-    .string()
-    .min(1, 'Password wajib diisi')
-    .min(8, 'Password minimal 8 karakter'),
+  password: z.string().min(8, 'Password minimal 8 karakter'),
 });
 export const registerSchema = z
   .object({
@@ -14,7 +11,7 @@ export const registerSchema = z
       .min(1, 'Nama lengkap wajib diisi')
       .min(3, 'Nama minimal 3 karakter')
       .max(255, 'Nama terlalu panjang'),
-
+    userName: z.string().min(3, 'Username minimal 3 karakter'),
     email: z
       .string()
       .min(1, 'Email wajib diisi')

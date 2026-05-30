@@ -3,7 +3,7 @@ import { InvariantError } from '../exceptions/index.js';
 
 const TokenManager = {
   generateAccessToken: (payload) =>
-    jwt.sign(payload, process.env.ACCESS_TOKEN_KEY, { expiresIn: '15m' }),
+    jwt.sign(payload, process.env.ACCESS_TOKEN_KEY, { expiresIn: '1h' }),
   generateRefreshToken: (payload) =>
     jwt.sign(payload, process.env.REFRESH_TOKEN_KEY, { expiresIn: '7d' }),
   verify: (accessToken, secret) => {

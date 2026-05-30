@@ -12,9 +12,7 @@ export const login = async (req, res, next) => {
     const { email, password } = req.validated;
     const userId = await userRepositories.verifyCredential(email, password);
     if (!userId) {
-      return next(
-        new AuthenticationError('Kredensial yang Anda berikan salah'),
-      );
+      return next(new AuthenticationError('Email atau password salah!'));
     }
 
     const accessToken = TokenManager.generateAccessToken({ id: userId });

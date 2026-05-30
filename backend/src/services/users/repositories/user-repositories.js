@@ -7,15 +7,23 @@ class UserRepositories {
     this.pool = new Pool();
   }
 
-  async addUser({ fullName, email, password }) {
+  async addUser({ fullName, userName, email, password }) {
     const id = `user-${nanoid(16)}`;
     const hashedPassword = await bcrypt.hash(password, 10);
     const createdAt = new Date().toISOString();
     const updatedAt = createdAt;
 
     const query = {
-      text: 'INSERT INTO users (id, "full_name", email, password, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id',
-      values: [id, fullName, email, hashedPassword, createdAt, updatedAt],
+      text: 'INSERT INTO users (id, "full_name", username, email, password, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id',
+      values: [
+        id,
+        fullName,
+        userName,
+        email,
+        hashedPassword,
+        createdAt,
+        updatedAt,
+      ],
     };
     const result = (await this.pool.query(query)).rows[0].id;
     const roleId = 'r-user-002'; // role default untuk user biasa
@@ -65,7 +73,7 @@ class UserRepositories {
   }
   async getMeById(userId) {
     const query = {
-      text: 'SELECT id, "full_name" AS "fullName", email FROM users WHERE id = $1',
+      text: 'SELECT id, "full_name" AS "fullName",username, email FROM users WHERE id = $1',
       values: [userId],
     };
     const result = await this.pool.query(query);

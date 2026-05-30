@@ -1,72 +1,31 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { Eye, EyeOff, HeartPulse } from "lucide-react";
-import api from "../services/api";
-
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { Eye, EyeOff, HeartPulse } from 'lucide-react';
+import { useRegister } from '@/hooks/register-hook';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { registerSchema } from '@/lib/validation/auth-validation';
 export default function RegisterPage() {
-  const navigate = useNavigate();
-
-  const [form, setForm] = useState({
-    fullName: "",
-    username: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
+  const { mutate, isPending, isError, error } = useRegister();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm({
+    resolver: zodResolver(registerSchema),
+    defaultValues: {
+      fullName: '',
+      userName: '',
+      email: '',
+      password: '',
+      confirmPassword: '',
+    },
   });
-
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
 
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
-
-    if (
-      !form.fullName ||
-      !form.username ||
-      !form.email ||
-      !form.password ||
-      !form.confirmPassword
-    ) {
-      setError("Semua field wajib diisi.");
-      return;
-    }
-
-    if (form.password.length < 6) {
-      setError("Password minimal 6 karakter.");
-      return;
-    }
-
-    if (form.password !== form.confirmPassword) {
-      setError("Konfirmasi password tidak sama.");
-      return;
-    }
-
-    try {
-      setLoading(true);
-
-      await api.post("/users/register", {
-        fullName: form.fullName,
-        username: form.username,
-        email: form.email,
-        password: form.password,
-      });
-
-      navigate("/login");
-    } catch (err) {
-      setError(
-        err?.response?.data?.message ||
-          "Registrasi gagal. Periksa kembali data Anda."
-      );
-    } finally {
-      setLoading(false);
-    }
+  const onSubmit = (data) => {
+    mutate(data);
   };
 
   return (
@@ -83,33 +42,33 @@ export default function RegisterPage() {
 
       <section className="relative z-10 w-full max-w-md rounded-3xl border border-white/70 bg-white/90 p-8 shadow-xl backdrop-blur">
         <div className="mb-7">
-          <h1 className="text-3xl font-bold text-gray-900">
-            Buat Akun Baru
-          </h1>
+          <h1 className="text-3xl font-bold text-gray-900">Buat Akun Baru</h1>
           <p className="mt-2 text-gray-500">
             Mulai perjalanan kesehatan jantung kamu bersama CardioCare.
           </p>
         </div>
 
-        {error && (
+        {isError && (
           <div className="mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
-            {error}
+            {error.response.data.message}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
           <div>
             <label className="mb-2 block text-sm font-semibold text-gray-800">
               Nama Lengkap
             </label>
             <input
               name="fullName"
-              value={form.fullName}
-              onChange={handleChange}
               type="text"
+              {...register('fullName')}
               placeholder="Masukkan nama lengkap"
               className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
             />
+            {errors.fullName && (
+              <p className="text-xs text-red-500">{errors.fullName.message}</p>
+            )}
           </div>
 
           <div>
@@ -117,13 +76,15 @@ export default function RegisterPage() {
               Username
             </label>
             <input
-              name="username"
-              value={form.username}
-              onChange={handleChange}
+              name="userName"
+              {...register('userName')}
               type="text"
               placeholder="Masukkan username"
               className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
             />
+            {errors.userName && (
+              <p className="text-xs text-red-500">{errors.userName.message}</p>
+            )}
           </div>
 
           <div>
@@ -132,12 +93,14 @@ export default function RegisterPage() {
             </label>
             <input
               name="email"
-              value={form.email}
-              onChange={handleChange}
+              {...register('email')}
               type="email"
               placeholder="contoh@email.com"
               className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
             />
+            {errors.email && (
+              <p className="text-xs text-red-500">{errors.email.message}</p>
+            )}
           </div>
 
           <div>
@@ -147,12 +110,16 @@ export default function RegisterPage() {
             <div className="relative">
               <input
                 name="password"
-                value={form.password}
-                onChange={handleChange}
-                type={showPassword ? "text" : "password"}
+                {...register('password')}
+                type={showPassword ? 'text' : 'password'}
                 placeholder="Min. 6 karakter"
                 className="w-full rounded-xl border border-gray-300 px-4 py-3 pr-12 text-sm outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
               />
+              {errors.password && (
+                <p className="text-xs text-red-500">
+                  {errors.password.message}
+                </p>
+              )}
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
@@ -170,12 +137,16 @@ export default function RegisterPage() {
             <div className="relative">
               <input
                 name="confirmPassword"
-                value={form.confirmPassword}
-                onChange={handleChange}
-                type={showConfirmPassword ? "text" : "password"}
+                {...register('confirmPassword')}
+                type={showConfirmPassword ? 'text' : 'password'}
                 placeholder="Ulangi password"
                 className="w-full rounded-xl border border-gray-300 px-4 py-3 pr-12 text-sm outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
               />
+              {errors.confirmPassword && (
+                <p className="text-xs text-red-500">
+                  {errors.confirmPassword.message}
+                </p>
+              )}
               <button
                 type="button"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
@@ -188,17 +159,17 @@ export default function RegisterPage() {
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={isPending}
             className="w-full rounded-xl bg-blue-700 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-200 transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-70"
           >
-            {loading ? "Mendaftarkan..." : "Daftar Sekarang"}
+            {isPending ? 'Mendaftarkan...' : 'Daftar Sekarang'}
           </button>
         </form>
 
         <div className="my-7 border-t border-gray-200" />
 
         <p className="text-center text-sm text-gray-500">
-          Sudah punya akun?{" "}
+          Sudah punya akun?{' '}
           <Link
             to="/login"
             className="font-semibold text-blue-700 hover:underline"

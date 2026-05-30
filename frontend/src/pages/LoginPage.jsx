@@ -1,55 +1,43 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { Eye, EyeOff, HeartPulse } from "lucide-react";
-import api from "../services/api";
-import storage from "../utils/storage";
+import { useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Eye, EyeOff, HeartPulse } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { loginSchema } from '@/lib/validation/auth-validation';
 
 export default function LoginPage() {
   const navigate = useNavigate();
-
-  const [form, setForm] = useState({
-    email: "",
-    password: "",
+  const { login } = useAuth();
+  const [serverError, setServerError] = useState('');
+  const {
+    register,
+    handleSubmit,
+    watch,
+    formState: { errors, isSubmitting },
+  } = useForm({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: '',
+      password: '',
+    },
   });
+  const password = watch('password');
+
+  useEffect(() => {
+    setServerError('');
+  }, [password]);
 
   const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
 
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
-
-    if (!form.email || !form.password) {
-      setError("Email dan password wajib diisi.");
-      return;
-    }
-
+  const onSubmit = async (data) => {
+    setServerError('');
     try {
-      setLoading(true);
-
-      const res = await api.post("/auth/login", {
-        email: form.email,
-        password: form.password,
-      });
-
-      const { accessToken, refreshToken } = res.data.data;
-
-      storage.setAccessToken(accessToken);
-      storage.setRefreshToken(refreshToken);
-
-      navigate("/dashboard");
-    } catch (err) {
-      setError(
-        err?.response?.data?.message ||
-          "Login gagal. Periksa kembali email dan password Anda."
-      );
-    } finally {
-      setLoading(false);
+      await login(data);
+      navigate('/dashboard');
+    } catch (error) {
+      const resError = error.response.data;
+      setServerError(resError.message);
     }
   };
 
@@ -75,25 +63,27 @@ export default function LoginPage() {
           </p>
         </div>
 
-        {error && (
+        {serverError && (
           <div className="mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
-            {error}
+            {serverError}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
           <div>
             <label className="mb-2 block text-sm font-semibold text-gray-800">
               Email Address
             </label>
             <input
               name="email"
-              value={form.email}
-              onChange={handleChange}
               type="email"
               placeholder="nama@email.com"
               className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+              {...register('email')}
             />
+            {errors.email && (
+              <p className="text-xs text-red-500">{errors.email.message}</p>
+            )}
           </div>
 
           <div>
@@ -106,12 +96,16 @@ export default function LoginPage() {
             <div className="relative">
               <input
                 name="password"
-                value={form.password}
-                onChange={handleChange}
-                type={showPassword ? "text" : "password"}
+                type={showPassword ? 'text' : 'password'}
                 placeholder="Masukkan password"
                 className="w-full rounded-xl border border-gray-300 px-4 py-3 pr-12 text-sm outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                {...register('password')}
               />
+              {errors.password && (
+                <p className="text-xs text-red-500">
+                  {errors.password.message}
+                </p>
+              )}
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
@@ -124,17 +118,17 @@ export default function LoginPage() {
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={isSubmitting}
             className="w-full rounded-xl bg-blue-700 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-200 transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-70"
           >
-            {loading ? "Masuk..." : "Masuk"}
+            {isSubmitting ? 'Masuk...' : 'Masuk'}
           </button>
         </form>
 
         <div className="my-7 border-t border-gray-200" />
 
         <p className="text-center text-sm text-gray-500">
-          Belum punya akun?{" "}
+          Belum punya akun?{' '}
           <Link
             to="/register"
             className="font-semibold text-blue-700 hover:underline"

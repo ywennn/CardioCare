@@ -4,6 +4,11 @@ import ErrorHandler from '../middleware/error.js';
 import cors from 'cors';
 import userAgent from 'express-useragent';
 import helmet from 'helmet';
+import morganStream from '../utils/morgan-stream.js';
+import logger from '../utils/logger.js';
+import morgan from 'morgan';
+import sanitize from '../middleware/sanitize.js';
+import { globalLimiter } from '../middleware/rateLimiter.js';
 const app = express();
 
 app.use(
@@ -19,9 +24,11 @@ app.use(
     contentSecurityPolicy: false,
   }),
 );
+app.use(globalLimiter);
+app.use(sanitize);
 app.use(express.json());
 app.use(userAgent.express());
 app.use(routes);
 app.use(ErrorHandler);
-
+app.use(morgan('combined', { stream: morganStream }));
 export default app;

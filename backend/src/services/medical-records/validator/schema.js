@@ -8,7 +8,7 @@ export const medicalRecordPayloadSchema = Joi.object({
   age: Joi.number().integer().min(0).required(),
   gender: Joi.number()
     .integer()
-    .valid(...Object.keys(mappingGender))
+    .valid(...Object.keys(mappingGender).map(Number))
     .required(),
   weight: Joi.number().integer().min(0).required(),
   height: Joi.number().integer().min(0).required(),
