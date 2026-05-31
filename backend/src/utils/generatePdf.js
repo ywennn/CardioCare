@@ -11,7 +11,7 @@ const generatePdfHtml = (data) => {
   const riskColor = isHighRisk ? '#dc2626' : '#16a34a';
   const riskBg = isHighRisk ? '#fff5f5' : '#f0fdf4';
   const riskBorder = isHighRisk ? '#fca5a5' : '#86efac';
-  const prob = (parseFloat(data.probability) * 100).toFixed(1);
+  const prob = Math.round((data?.probability ?? 0) * 100);
 
   const bmi = parseFloat((data.weight / (data.height / 100) ** 2).toFixed(1));
   const bmiCategory =
@@ -22,22 +22,17 @@ const generatePdfHtml = (data) => {
         : bmi >= 18.5
           ? 'Normal'
           : 'Underweight';
-  const genderLabel = data.gender === 1 ? 'Laki-laki' : 'Perempuan';
+  const genderLabel = data.gender === 1 ? 'Perempuan' : 'Laki-laki';
   const bloodPressure = `${data.systolic_pressure}/${data.diastolic_pressure} mmHg`;
+  const levelMapping = {
+    1: 'Normal',
+    2: 'Di Atas Normal',
+    3: 'Jauh Di Atas Normal',
+  };
 
-  const cholesterolMap = {
-    0: 'Normal',
-    1: 'Di Atas Normal',
-    2: 'Jauh Di Atas Normal',
-  };
-  const glucoseMap = {
-    0: 'Normal',
-    1: 'Di Atas Normal',
-    2: 'Jauh Di Atas Normal',
-  };
   const cholesterolLabel =
-    cholesterolMap[data.cholesterol_level] ?? data.cholesterol_level;
-  const glucoseLabel = glucoseMap[data.glucose_level] ?? data.glucose_level;
+    levelMapping[data.cholesterol_level] ?? data.cholesterol_level;
+  const glucoseLabel = levelMapping[data.glucose_level] ?? data.glucose_level;
 
   const riskFactors = data.metadata?.top_risk_factors ?? [];
   const aiExpertRaw = data.metadata?.ai_expert_recommendation ?? '';

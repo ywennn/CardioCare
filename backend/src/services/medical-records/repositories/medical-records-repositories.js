@@ -28,7 +28,7 @@ class MedicalRecordsRepositories {
       };
 
       const aiResponse = await predict(predictionData);
-
+      console.log(aiResponse);
       await client.query('BEGIN');
 
       const monitoringQuery = await client.query(
@@ -120,12 +120,26 @@ class MedicalRecordsRepositories {
   }
   async detailScreeningById(screeningId, userId) {
     const query = `
-    SELECT *
-    FROM screenings_histories h
-    JOIN screening s ON h.screening_id = s.id
-    JOIN health_monitoring m ON s.monitoring_id = m.id
-    WHERE s.id = $1 AND s.user_id = $2
-  `;
+  SELECT 
+    h.id AS history_id,
+    h.activity,
+    h.metadata,
+    s.id AS screening_id,
+    s.label,
+    s.probability,
+    s.category,
+    s.recommendation,
+    s.created_at,
+    m.id AS monitoring_id,
+    m.age, m.gender, m.weight, m.height,
+    m.systolic_pressure, m.diastolic_pressure,
+    m.cholesterol_level, m.glucose_level,
+    m.smoking_status, m.alcohol_status, m.activity_status
+  FROM screenings_histories h
+  JOIN screening s ON h.screening_id = s.id
+  JOIN health_monitoring m ON s.monitoring_id = m.id
+  WHERE s.id = $1 AND s.user_id = $2
+`;
     const { rows } = await this.pool.query(query, [screeningId, userId]);
     console.log('rows:', rows);
     return rows[0];
@@ -166,7 +180,7 @@ class MedicalRecordsRepositories {
       COUNT(*)::int AS total_screenings,
       ROUND(AVG(probability)::numeric, 2) AS average_probability,
       COUNT(*) FILTER (WHERE category = 'BERISIKO TINGGI')::int AS high_risk_count,
-      COUNT(*) FILTER (WHERE category = 'TIDAK BERISIKO')::int AS low_risk_count,
+      COUNT(*) FILTER (WHERE category = 'RISIKO RENDAH/AMAN')::int AS low_risk_count,
 
       MIN(created_at) AS first_screening_at,
       MAX(created_at) AS last_screening_at,

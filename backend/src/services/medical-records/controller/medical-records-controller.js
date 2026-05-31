@@ -13,6 +13,7 @@ export const addMedicalRecord = async (req, res, next) => {
       medicalRecordData,
       userId,
     );
+
     const heightInMeter = result.height / 100;
     const bmiScore = result.weight / (heightInMeter * heightInMeter);
     const bmi = parseFloat(bmiScore.toFixed(1));
@@ -35,7 +36,7 @@ export const addMedicalRecord = async (req, res, next) => {
       screeningId: result.screening.id,
       patientVitals: {
         age: result.age,
-        gender: result.gender === 1 ? 'Male' : 'Female',
+        gender: genderMapping[result.gender],
         bloodPressure: `${result.systolic_pressure}/${result.diastolic_pressure} mmHg`,
         bmi: bmi,
         bmiCategory: bmiCategory,
@@ -110,7 +111,7 @@ export const getDetailScreeningById = async (req, res, next) => {
     );
 
     if (!row) {
-      next(new InvariantError('Detail screening tidak ditemukan'));
+      return next(new InvariantError('Detail screening tidak ditemukan'));
     }
     const genderMapping = { 1: 'Perempuan', 2: 'Laki-laki' };
     const levelMapping = {
@@ -303,7 +304,7 @@ export const getTrendScreening = async (req, res, next) => {
       data_points: dataPoints,
     });
   } catch (error) {
-    next();
+    next(error);
   }
 };
 

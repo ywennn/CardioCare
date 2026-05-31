@@ -1,91 +1,45 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Activity, HeartPulse, User, RotateCcw, Stethoscope, Dumbbell } from 'lucide-react';
-import { toast } from 'sonner';
-import DashboardLayout from '@/components/layout/DashboardLayout';
-import api from '@/services/api';
-
-const initialForm = {
-  age: '',
-  gender: '',
-  height: '',
-  weight: '',
-  systolicPressure: '',
-  diastolicPressure: '',
-  cholesterolLevel: '',
-  glucoseLevel: '',
-  smokingStatus: '',
-  alcoholStatus: '',
-  activityStatus: '',
-};
+import { User, RotateCcw, Stethoscope, Dumbbell } from 'lucide-react';
+import MainLayout from '@/components/layout/MainLayout';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import screeningSchema from '@/lib/validation/screening-validation';
+import { useScreening } from '@/hooks/screening-hook';
+import { Loader2 } from 'lucide-react';
+import { forwardRef } from 'react';
 
 export default function ScreeningPage() {
-  const navigate = useNavigate();
-  const [form, setForm] = useState(initialForm);
-  const [loading, setLoading] = useState(false);
-
-  const handleChange = (e) => {
-    setForm({
-      ...form,
-      [e.target.name]: e.target.value,
-    });
+  const { mutate, isError, error, isPending } = useScreening();
+  const numberRegister = {
+    setValueAs: (v) => (v === '' ? undefined : Number(v)),
   };
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm({
+    resolver: zodResolver(screeningSchema),
+    defaultValues: {
+      age: undefined,
+      gender: undefined,
+      weight: undefined,
+      height: undefined,
+      systolicPressure: undefined,
+      diastolicPressure: undefined,
+      cholesterolLevel: undefined,
+      glucoseLevel: undefined,
+      smokingStatus: undefined,
+      alcoholStatus: undefined,
+      activityStatus: undefined,
+    },
+  });
 
-  const handleReset = () => {
-    setForm(initialForm);
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    const isEmpty = Object.values(form).some((value) => value === '');
-
-    if (isEmpty) {
-      toast.error('Semua field wajib diisi.');
-      return;
-    }
-
-    const payload = {
-      age: Number(form.age),
-      gender: Number(form.gender),
-      height: Number(form.height),
-      weight: Number(form.weight),
-      systolicPressure: Number(form.systolicPressure),
-      diastolicPressure: Number(form.diastolicPressure),
-      cholesterolLevel: Number(form.cholesterolLevel),
-      glucoseLevel: Number(form.glucoseLevel),
-      smokingStatus: Number(form.smokingStatus),
-      alcoholStatus: Number(form.alcoholStatus),
-      activityStatus: Number(form.activityStatus),
-    };
-
-    try {
-      setLoading(true);
-
-      const res = await api.post('/screening', payload);
-
-      toast.success('Skrining berhasil diproses.');
-
-      const screeningId =
-        res?.data?.data?.id || res?.data?.data?.screeningId || res?.data?.id;
-
-      if (screeningId) {
-        navigate(`/screening/result/${screeningId}`);
-      } else {
-        navigate('/history');
-      }
-    } catch (err) {
-      toast.error(
-        err?.response?.data?.message ||
-          'Skrining gagal. Pastikan backend dan token login sudah aktif.'
-      );
-    } finally {
-      setLoading(false);
-    }
+  const onSubmit = (data) => {
+    mutate(data);
   };
 
   return (
-    <DashboardLayout title="Skrining Risiko">
+    <MainLayout title="Skrining Risiko">
       <div className="mx-auto max-w-5xl">
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-gray-900">
@@ -96,9 +50,13 @@ export default function ScreeningPage() {
             risiko penyakit jantung oleh AI.
           </p>
         </div>
-
+        {isError && (
+          <div className="mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+            {error.response.data.message}
+          </div>
+        )}
         <form
-          onSubmit={handleSubmit}
+          onSubmit={handleSubmit(onSubmit)}
           className="rounded-3xl border bg-white p-8 shadow-sm"
         >
           <SectionTitle icon={User} title="Data Pribadi" />
@@ -107,16 +65,18 @@ export default function ScreeningPage() {
             <Input
               label="Usia (Tahun)"
               name="age"
+              type="number"
+              error={errors.age?.message}
               placeholder="Contoh: 45"
-              value={form.age}
-              onChange={handleChange}
+              {...register('age', numberRegister)}
             />
 
             <Select
               label="Jenis Kelamin"
               name="gender"
-              value={form.gender}
-              onChange={handleChange}
+              type="number"
+              error={errors.gender?.message}
+              {...register('gender', { valueAsNumber: true })}
               options={[
                 { value: '1', label: 'Laki-laki' },
                 { value: '2', label: 'Perempuan' },
@@ -126,17 +86,19 @@ export default function ScreeningPage() {
             <Input
               label="Berat Badan (kg)"
               name="weight"
+              type="number"
+              error={errors.weight?.message}
               placeholder="Contoh: 70"
-              value={form.weight}
-              onChange={handleChange}
+              {...register('weight', numberRegister)}
             />
 
             <Input
               label="Tinggi Badan (cm)"
               name="height"
+              type="number"
+              error={errors.height?.message}
               placeholder="Contoh: 170"
-              value={form.height}
-              onChange={handleChange}
+              {...register('height', numberRegister)}
             />
           </div>
 
@@ -147,42 +109,44 @@ export default function ScreeningPage() {
               label="Tekanan Darah Sistolik (mmHg)"
               name="systolicPressure"
               placeholder="Contoh: 120"
+              type="number"
+              error={errors.systolicPressure?.message}
               helper="Nilai atas tekanan darah saat jantung memompa."
-              value={form.systolicPressure}
-              onChange={handleChange}
+              {...register('systolicPressure', numberRegister)}
             />
 
             <Input
               label="Tekanan Darah Diastolik (mmHg)"
               name="diastolicPressure"
               placeholder="Contoh: 80"
+              type="number"
+              error={errors.diastolicPressure?.message}
               helper="Nilai bawah tekanan darah saat jantung istirahat."
-              value={form.diastolicPressure}
-              onChange={handleChange}
+              {...register('diastolicPressure', numberRegister)}
             />
 
             <Select
               label="Kadar Kolesterol"
               name="cholesterolLevel"
-              value={form.cholesterolLevel}
-              onChange={handleChange}
+              error={errors.cholesterolLevel?.message}
               options={[
                 { value: '1', label: 'Normal' },
                 { value: '2', label: 'Di atas normal' },
                 { value: '3', label: 'Tinggi' },
               ]}
+              {...register('cholesterolLevel', numberRegister)}
             />
 
             <Select
               label="Kadar Glukosa (Gula Darah)"
               name="glucoseLevel"
-              value={form.glucoseLevel}
-              onChange={handleChange}
+              error={errors.glucoseLevel?.message}
               options={[
                 { value: '1', label: 'Normal' },
                 { value: '2', label: 'Di atas normal' },
                 { value: '3', label: 'Tinggi' },
               ]}
+              {...register('glucoseLevel', numberRegister)}
             />
           </div>
 
@@ -191,42 +155,42 @@ export default function ScreeningPage() {
           <div className="grid gap-5 md:grid-cols-3">
             <Select
               label="Status Merokok"
+              error={errors.smokingStatus?.message}
               name="smokingStatus"
-              value={form.smokingStatus}
-              onChange={handleChange}
               options={[
                 { value: '0', label: 'Tidak Merokok' },
                 { value: '1', label: 'Merokok' },
               ]}
+              {...register('smokingStatus', numberRegister)}
             />
 
             <Select
               label="Konsumsi Alkohol"
               name="alcoholStatus"
-              value={form.alcoholStatus}
-              onChange={handleChange}
+              error={errors.alcoholStatus?.message}
               options={[
                 { value: '0', label: 'Tidak' },
                 { value: '1', label: 'Ya' },
               ]}
+              {...register('alcoholStatus', numberRegister)}
             />
 
             <Select
               label="Aktivitas Fisik"
               name="activityStatus"
-              value={form.activityStatus}
-              onChange={handleChange}
+              error={errors.activityStatus?.message}
               options={[
                 { value: '0', label: 'Tidak Aktif' },
                 { value: '1', label: 'Aktif' },
               ]}
+              {...register('activityStatus', numberRegister)}
             />
           </div>
 
           <div className="mt-10 flex justify-end gap-4">
             <button
               type="button"
-              onClick={handleReset}
+              onClick={() => reset()}
               className="inline-flex items-center gap-2 rounded-xl border border-gray-300 px-5 py-3 text-sm font-semibold text-gray-600 hover:bg-gray-50"
             >
               <RotateCcw size={16} />
@@ -235,15 +199,16 @@ export default function ScreeningPage() {
 
             <button
               type="submit"
-              disabled={loading}
+              disabled={isPending}
               className="rounded-xl bg-blue-700 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-200 hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-70"
             >
-              {loading ? 'Memproses...' : 'Cek Risiko Jantung'}
+              {isPending && <Loader2 size={15} className="animate-spin" />}
+              {isPending ? 'Memproses...' : 'Cek Risiko Jantung'}
             </button>
           </div>
         </form>
       </div>
-    </DashboardLayout>
+    </MainLayout>
   );
 }
 
@@ -259,7 +224,10 @@ function SectionTitle({ icon: Icon, title }) {
   );
 }
 
-function Input({ label, name, value, onChange, placeholder, helper }) {
+const Input = forwardRef(function Input(
+  { label, placeholder, helper, error, ...rest },
+  ref,
+) {
   return (
     <div>
       <label className="mb-2 block text-sm font-semibold text-gray-800">
@@ -267,28 +235,38 @@ function Input({ label, name, value, onChange, placeholder, helper }) {
       </label>
       <input
         type="number"
-        name={name}
-        value={value}
-        onChange={onChange}
+        ref={ref}
         placeholder={placeholder}
-        className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+        className={`w-full rounded-xl border px-4 py-3 text-sm outline-none transition focus:ring-2 focus:ring-blue-100 ${
+          error
+            ? 'border-red-400 focus:border-red-400'
+            : 'border-gray-300 focus:border-blue-600'
+        }`}
+        {...rest}
       />
       {helper && <p className="mt-2 text-xs text-gray-400">{helper}</p>}
+      {error && <p className="mt-1 text-xs text-red-500">{error}</p>}
     </div>
   );
-}
+});
 
-function Select({ label, name, value, onChange, options }) {
+const Select = forwardRef(function Select(
+  { label, options, error, ...rest },
+  ref,
+) {
   return (
     <div>
       <label className="mb-2 block text-sm font-semibold text-gray-800">
         {label} <span className="text-red-500">*</span>
       </label>
       <select
-        name={name}
-        value={value}
-        onChange={onChange}
-        className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+        ref={ref}
+        className={`w-full rounded-xl border bg-white px-4 py-3 text-sm outline-none transition focus:ring-2 focus:ring-blue-100 ${
+          error
+            ? 'border-red-400 focus:border-red-400'
+            : 'border-gray-300 focus:border-blue-600'
+        }`}
+        {...rest}
       >
         <option value="">Pilih Status</option>
         {options.map((item) => (
@@ -297,6 +275,7 @@ function Select({ label, name, value, onChange, options }) {
           </option>
         ))}
       </select>
+      {error && <p className="mt-1 text-xs text-red-500">{error}</p>}
     </div>
   );
-}
+});

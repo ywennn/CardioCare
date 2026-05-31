@@ -1,17 +1,9 @@
-import {
-  User,
-  Mail,
-  ShieldCheck,
-  Pencil,
-  Lock,
-  AlertTriangle,
-  Camera,
-} from 'lucide-react';
-import DashboardLayout from '@/components/layout/DashboardLayout';
+import { ShieldCheck, Pencil, Lock, AlertTriangle, Camera } from 'lucide-react';
+import MainLayout from '@/components/layout/MainLayout';
 
 export default function ProfilePage() {
   return (
-    <DashboardLayout title="Profil">
+    <MainLayout title="Profil">
       <div className="mx-auto max-w-6xl">
         <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
           {/* Profile Card */}
@@ -55,9 +47,7 @@ export default function ProfilePage() {
 
                 <div>
                   <p className="text-xs text-gray-400">Skrining</p>
-                  <p className="mt-1 font-semibold text-gray-800">
-                    12 Kali
-                  </p>
+                  <p className="mt-1 font-semibold text-gray-800">12 Kali</p>
                 </div>
               </div>
             </div>
@@ -71,22 +61,14 @@ export default function ProfilePage() {
             <div className="rounded-3xl border bg-white shadow-sm">
               <div className="flex items-center gap-2 border-b px-6 py-4">
                 <Pencil size={18} />
-                <h3 className="font-semibold text-gray-900">
-                  Edit Profil
-                </h3>
+                <h3 className="font-semibold text-gray-900">Edit Profil</h3>
               </div>
 
               <div className="p-6">
                 <div className="grid gap-5 md:grid-cols-2">
-                  <Input
-                    label="Nama Lengkap"
-                    value="Budi Darmawan"
-                  />
+                  <Input label="Nama Lengkap" value="Budi Darmawan" />
 
-                  <Input
-                    label="Alamat Email"
-                    value="budi.darmawan@email.com"
-                  />
+                  <Input label="Alamat Email" value="budi.darmawan@email.com" />
                 </div>
 
                 <div className="mt-6 flex justify-end">
@@ -102,9 +84,7 @@ export default function ProfilePage() {
             <div className="rounded-3xl border bg-white shadow-sm">
               <div className="flex items-center gap-2 border-b px-6 py-4">
                 <Lock size={18} />
-                <h3 className="font-semibold text-gray-900">
-                  Ubah Password
-                </h3>
+                <h3 className="font-semibold text-gray-900">Ubah Password</h3>
               </div>
 
               <div className="p-6">
@@ -142,19 +122,14 @@ export default function ProfilePage() {
 
             <div className="rounded-3xl border border-red-200 bg-red-50 p-6">
               <div className="flex items-start gap-3">
-                <AlertTriangle
-                  size={20}
-                  className="mt-0.5 text-red-600"
-                />
+                <AlertTriangle size={20} className="mt-0.5 text-red-600" />
 
                 <div>
-                  <h3 className="font-bold text-red-700">
-                    Area Berbahaya
-                  </h3>
+                  <h3 className="font-bold text-red-700">Area Berbahaya</h3>
 
                   <p className="mt-2 text-sm text-red-600">
-                    Setelah Anda menghapus akun, tidak ada jalan kembali.
-                    Harap berhati-hati.
+                    Setelah Anda menghapus akun, tidak ada jalan kembali. Harap
+                    berhati-hati.
                   </p>
 
                   <button className="mt-4 text-sm font-semibold text-red-700 hover:underline">
@@ -166,16 +141,11 @@ export default function ProfilePage() {
           </div>
         </div>
       </div>
-    </DashboardLayout>
+    </MainLayout>
   );
 }
 
-function Input({
-  label,
-  value = '',
-  placeholder = '',
-  type = 'text',
-}) {
+function Input({ label, value = '', placeholder = '', type = 'text' }) {
   return (
     <div>
       <label className="mb-2 block text-sm font-semibold text-gray-700">

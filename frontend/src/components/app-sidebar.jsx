@@ -1,5 +1,4 @@
 import { NavMain } from '@/components/nav-main';
-import { NavUser } from '@/components/nav-user';
 import {
   Sidebar,
   SidebarContent,
@@ -17,7 +16,6 @@ import {
   UserIcon,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { useAuth } from '@/hooks/useAuth';
 const navItems = [
   {
     label: 'Dashboard',
@@ -46,7 +44,6 @@ const navItems = [
 ];
 
 export function AppSidebar({ ...props }) {
-  const { user, logout } = useAuth();
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
@@ -55,14 +52,7 @@ export function AppSidebar({ ...props }) {
             <SidebarMenuButton size="lg" asChild>
               <Link to="/dashboard" className="flex items-center gap-2">
                 <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-600 text-white shrink-0">
-                  <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="currentColor"
-                  >
-                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-                  </svg>
+                  <HeartPulseIcon size={20} />
                 </div>
                 <div className="flex flex-col leading-tight">
                   <span className="font-bold text-sm text-blue-950">
@@ -79,7 +69,11 @@ export function AppSidebar({ ...props }) {
         <NavMain items={navItems} />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={user} logout={logout} />
+        <div className="px-3 py-2 group-data-[collapsible=icon]:hidden">
+          <p className="text-xs text-slate-400 text-center whitespace-nowrap">
+            © {new Date().getFullYear()} CardioCare
+          </p>
+        </div>
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

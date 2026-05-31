@@ -11,7 +11,7 @@ const ErrorHandler = (err, req, res, next) => {
     return response(res, err.statusCode, err.message, null);
   if (err.isJoi) return response(res, 400, err.details[0].message, null);
   if (err.isAxiosError || err.code === 'ECONNREFUSED') {
-    return response(res, 503, 'Service unavailable', null);
+    return response(res, 503, 'Service unavailable. Silahkan coba lagi', null);
   }
   if (err.code && err.code.startsWith('23')) {
     return response(res, 400, 'Database error', null);

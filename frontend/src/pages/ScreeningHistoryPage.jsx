@@ -1,13 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import {
-  Search,
-  ChevronLeft,
-  ChevronRight,
-  ArrowRight,
-} from 'lucide-react';
-import DashboardLayout from '@/components/layout/DashboardLayout';
-
+import { Search, ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react';
+import MainLayout from '@/components/layout/MainLayout';
 const histories = [
   {
     id: '1',
@@ -56,7 +50,7 @@ export default function ScreeningHistoryPage() {
   }, [search, activeFilter]);
 
   return (
-    <DashboardLayout title="Riwayat Skrining">
+    <MainLayout title="Riwayat Skrining">
       <div className="mx-auto max-w-6xl space-y-6">
         <section className="rounded-2xl bg-white p-5 shadow-sm">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -113,9 +107,7 @@ export default function ScreeningHistoryPage() {
                       <p className="text-xs text-gray-400">{item.time}</p>
                     </td>
 
-                    <td className="px-8 py-5 text-gray-700">
-                      {item.pressure}
-                    </td>
+                    <td className="px-8 py-5 text-gray-700">{item.pressure}</td>
 
                     <td className="px-8 py-5">
                       <RiskBadge category={item.category} />
@@ -141,7 +133,8 @@ export default function ScreeningHistoryPage() {
 
           <div className="flex items-center justify-between border-t border-gray-100 px-8 py-4">
             <p className="text-sm text-gray-500">
-              Menampilkan {filteredHistories.length} dari {histories.length} data
+              Menampilkan {filteredHistories.length} dari {histories.length}{' '}
+              data
             </p>
 
             <div className="flex gap-2">
@@ -188,7 +181,7 @@ export default function ScreeningHistoryPage() {
           </div>
         </section>
       </div>
-    </DashboardLayout>
+    </MainLayout>
   );
 }
 

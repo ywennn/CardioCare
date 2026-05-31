@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, HeartPulse } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
@@ -13,7 +13,6 @@ export default function LoginPage() {
   const {
     register,
     handleSubmit,
-    watch,
     formState: { errors, isSubmitting },
   } = useForm({
     resolver: zodResolver(loginSchema),
@@ -22,11 +21,6 @@ export default function LoginPage() {
       password: '',
     },
   });
-  const password = watch('password');
-
-  useEffect(() => {
-    setServerError('');
-  }, [password]);
 
   const [showPassword, setShowPassword] = useState(false);
 
@@ -37,6 +31,7 @@ export default function LoginPage() {
       navigate('/dashboard');
     } catch (error) {
       const resError = error.response.data;
+      console.log(resError);
       setServerError(resError.message);
     }
   };
