@@ -3,3 +3,4 @@ node_modules
 postman_collection.json
 logs/
 *.log
+cardio-api-webserver.pem
