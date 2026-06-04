@@ -10,7 +10,7 @@ import morgan from 'morgan';
 import sanitize from '../middleware/sanitize.js';
 import { globalLimiter } from '../middleware/rateLimiter.js';
 const app = express();
-
+app.set('trust proxy', 1);
 app.use(
   cors({
     origin: 'https://cardio-care-gold.vercel.app',
