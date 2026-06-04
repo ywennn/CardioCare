@@ -14,7 +14,7 @@ function ProfileForm({ profile, onUpdate, loading, error, success }) {
     fullName: profile?.fullName || '',
     email: profile?.email || '',
   });
-
+  console.log(form);
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
