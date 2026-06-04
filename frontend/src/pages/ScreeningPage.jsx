@@ -78,8 +78,8 @@ export default function ScreeningPage() {
               error={errors.gender?.message}
               {...register('gender', { valueAsNumber: true })}
               options={[
-                { value: '1', label: 'Laki-laki' },
-                { value: '2', label: 'Perempuan' },
+                { value: '1', label: 'Perempuan' },
+                { value: '2', label: 'Laki-laki' },
               ]}
             />
 
