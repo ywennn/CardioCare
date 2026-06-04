@@ -134,14 +134,13 @@ class MedicalRecordsRepositories {
     m.age, m.gender, m.weight, m.height,
     m.systolic_pressure, m.diastolic_pressure,
     m.cholesterol_level, m.glucose_level,
-    m.smoking_status, m.alcohol_status, m.activity_status
+    m.smoking_status, m.alcohol_status, m.activity_status, m.recorded_at
   FROM screenings_histories h
   JOIN screening s ON h.screening_id = s.id
   JOIN health_monitoring m ON s.monitoring_id = m.id
   WHERE s.id = $1 AND s.user_id = $2
 `;
     const { rows } = await this.pool.query(query, [screeningId, userId]);
-    console.log('rows:', rows);
     return rows[0];
   }
   async deleteMedicalRecordById(screeningId, userId) {

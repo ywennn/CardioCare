@@ -1,5 +1,6 @@
 import MainLayout from '@/components/layout/MainLayout';
 import { useAuth } from '@/hooks/useAuth';
+import { useState } from 'react';
 import {
   Activity,
   HeartPulse,
@@ -8,8 +9,10 @@ import {
   ArrowRight,
   Eye,
 } from 'lucide-react';
+import { formatTrendDate } from '@/utils/formatedTrendDate';
 import { Link } from 'react-router-dom';
-
+import { useScreeningSummary, useTrendSummary } from '@/hooks/screening-hook';
+import Trend from '../components/ui/trend';
 const histories = [
   {
     date: '24 Okt 2024, 09:15',
@@ -35,10 +38,28 @@ const articles = [
     category: 'Gaya Hidup',
   },
 ];
-
 export default function DashboardPage() {
   const { user } = useAuth();
+  const [period, setPeriod] = useState('30d');
+  const { data: summaryData } = useScreeningSummary();
+  const { data: trendData } = useTrendSummary(period);
+  console.log('summaryData:', summaryData);
+  console.log('trendData:', trendData);
+  const dataTrend =
+    trendData?.data?.data?.data_points.map((point) => ({
+      date: formatTrendDate(point.date, period),
+      value: parseFloat(point.probability) * 100,
+      category: point.category,
+      blood_pressure: point.blood_pressure,
+      bmi: point.bmi,
+      screening_id: point.screening_id,
+    })) || [];
+  const latestProb = summaryData?.data?.data?.latest_probability || 0;
+  const persen = Math.round(latestProb * 100);
+  const risikoTerbaru =
+    summaryData?.data?.data?.latest_category || 'Tidak diketahui';
   const { username } = user;
+  const avgRisk = summaryData?.data?.data?.average_probability || 0;
   return (
     <MainLayout title="Dashboard">
       <div className="space-y-6">
@@ -74,7 +95,10 @@ export default function DashboardPage() {
             <p className="text-xs font-semibold uppercase text-gray-400">
               Total Skrining
             </p>
-            <h2 className="mt-2 text-2xl font-bold text-gray-900">2 Sesi</h2>
+            <h2 className="mt-2 text-2xl font-bold text-gray-900">
+              {' '}
+              {summaryData?.data?.data?.total_screenings || 0}
+            </h2>
           </div>
 
           <div className="rounded-2xl border bg-white p-6 shadow-sm">
@@ -84,7 +108,9 @@ export default function DashboardPage() {
             <p className="text-xs font-semibold uppercase text-gray-400">
               Rata-rata Risiko
             </p>
-            <h2 className="mt-2 text-2xl font-bold text-emerald-600">12.5%</h2>
+            <h2 className="mt-2 text-2xl font-bold text-emerald-600">
+              {Math.round(avgRisk * 100)}%
+            </h2>
           </div>
 
           <div className="rounded-2xl border bg-white p-6 shadow-sm">
@@ -92,62 +118,29 @@ export default function DashboardPage() {
               <p className="text-xs font-semibold uppercase text-gray-400">
                 Risiko Terbaru
               </p>
-              <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">
-                Rendah
-              </span>
             </div>
-            <h2 className="mt-4 text-2xl font-bold text-gray-900">
-              Normal (Safe Zone)
+            <h2
+              className={`mt-2 text-2xl font-bold ${
+                risikoTerbaru === 'BERISIKO TINGGI'
+                  ? 'text-red-600'
+                  : 'text-emerald-500'
+              }`}
+            >
+              {risikoTerbaru}
             </h2>
             <div className="mt-5 h-2 rounded-full bg-gray-100">
-              <div className="h-2 w-[18%] rounded-full bg-emerald-500" />
+              <div
+                className={`h-2 w-[${persen}%] rounded-full ${persen <= 20 ? 'bg-emerald-500' : persen <= 50 ? 'bg-blue-500' : 'bg-red-500'}`}
+              />
             </div>
             <p className="mt-2 text-right text-xs text-gray-400">
-              18% Probability
+              {persen}% Probability
             </p>
           </div>
         </section>
 
-        <section className="grid gap-6 lg:grid-cols-3">
-          <div className="rounded-2xl border bg-white p-6 shadow-sm lg:col-span-2">
-            <div className="mb-8 flex items-center justify-between">
-              <div>
-                <h2 className="font-bold text-gray-900">
-                  Tren Kesehatan Jantung
-                </h2>
-                <p className="text-sm text-gray-400">
-                  Statistik 7 hari terakhir
-                </p>
-              </div>
-              <div className="flex gap-2">
-                <button className="rounded-lg bg-gray-100 px-3 py-1 text-xs">
-                  7D
-                </button>
-                <button className="rounded-lg px-3 py-1 text-xs text-gray-400">
-                  30D
-                </button>
-              </div>
-            </div>
-
-            <div className="flex h-56 items-end gap-5">
-              {[35, 55, 28, 75, 42, 18, 48].map((height, index) => (
-                <div
-                  key={index}
-                  className="flex flex-1 flex-col items-center gap-3"
-                >
-                  <div
-                    className={`w-full rounded-t-xl ${
-                      index === 6 ? 'bg-blue-700' : 'bg-blue-200'
-                    }`}
-                    style={{ height: `${height}%` }}
-                  />
-                  <span className="text-xs font-medium text-gray-400">
-                    {['SEN', 'SEL', 'RAB', 'KAM', 'JUM', 'SAB', 'MIN'][index]}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
+        <section className="grid gap-6 lg:grid-cols-1">
+          <Trend data={dataTrend} period={period} setPeriod={setPeriod} />
 
           <div className="rounded-2xl border bg-white p-6 shadow-sm">
             <h2 className="mb-5 font-bold text-gray-900">Artikel Pilihan</h2>

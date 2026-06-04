@@ -6,6 +6,7 @@ const generatePdfHtml = (data) => {
     hour: '2-digit',
     minute: '2-digit',
   });
+  console.log(data.recorded_at);
 
   const isHighRisk = data.category === 'BERISIKO TINGGI';
   const riskColor = isHighRisk ? '#dc2626' : '#16a34a';

@@ -1,53 +1,27 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Search, ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react';
+import { useHistoryScreening } from '@/hooks/screening-hook';
 import MainLayout from '@/components/layout/MainLayout';
-const histories = [
-  {
-    id: '1',
-    date: '24 Okt 2024',
-    time: '14:20 WIB',
-    pressure: '120/80 mmHg',
-    category: 'Normal',
-    probability: '12%',
-  },
-  {
-    id: '2',
-    date: '12 Okt 2024',
-    time: '09:15 WIB',
-    pressure: '135/90 mmHg',
-    category: 'Risiko Rendah',
-    probability: '34%',
-  },
-  {
-    id: '3',
-    date: '01 Sep 2024',
-    time: '16:45 WIB',
-    pressure: '150/95 mmHg',
-    category: 'Risiko Tinggi',
-    probability: '78%',
-  },
-];
+import { formatScreeningDate } from '../utils/formatedDate';
 
-const filters = ['Semua', 'Normal', 'Risiko Rendah', 'Risiko Tinggi'];
-
+const EMPTY_ARRAY = [];
 export default function ScreeningHistoryPage() {
+  const { data: historyData } = useHistoryScreening();
   const [search, setSearch] = useState('');
-  const [activeFilter, setActiveFilter] = useState('Semua');
-
+  const historiesFromApi = historyData?.data?.data ?? EMPTY_ARRAY;
   const filteredHistories = useMemo(() => {
-    return histories.filter((item) => {
+    return historiesFromApi.filter((item) => {
       const matchSearch =
-        item.date.toLowerCase().includes(search.toLowerCase()) ||
-        item.pressure.toLowerCase().includes(search.toLowerCase()) ||
+        formatScreeningDate(item.recorded_at)
+          .dateStr.toLowerCase()
+          .includes(search.toLowerCase()) ||
+        item.blood_pressure.toLowerCase().includes(search.toLowerCase()) ||
         item.category.toLowerCase().includes(search.toLowerCase());
 
-      const matchFilter =
-        activeFilter === 'Semua' || item.category === activeFilter;
-
-      return matchSearch && matchFilter;
+      return matchSearch;
     });
-  }, [search, activeFilter]);
+  }, [search, historiesFromApi]);
 
   return (
     <MainLayout title="Riwayat Skrining">
@@ -67,22 +41,6 @@ export default function ScreeningHistoryPage() {
                 className="w-full rounded-xl border border-gray-200 bg-gray-50 py-3 pl-12 pr-4 text-sm outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
               />
             </div>
-
-            <div className="flex flex-wrap gap-2">
-              {filters.map((item) => (
-                <button
-                  key={item}
-                  onClick={() => setActiveFilter(item)}
-                  className={`rounded-full px-5 py-2 text-sm font-semibold transition ${
-                    activeFilter === item
-                      ? 'bg-blue-700 text-white'
-                      : 'bg-gray-100 text-gray-600 hover:bg-blue-50 hover:text-blue-700'
-                  }`}
-                >
-                  {item}
-                </button>
-              ))}
-            </div>
           </div>
         </section>
 
@@ -101,25 +59,34 @@ export default function ScreeningHistoryPage() {
 
               <tbody>
                 {filteredHistories.map((item) => (
-                  <tr key={item.id} className="border-t border-gray-100">
+                  <tr
+                    key={item.screening_id}
+                    className="border-t border-gray-100"
+                  >
                     <td className="px-8 py-5">
-                      <p className="font-medium text-gray-900">{item.date}</p>
-                      <p className="text-xs text-gray-400">{item.time}</p>
+                      <p className="font-medium text-gray-900">
+                        {`${formatScreeningDate(item.recorded_at).dateStr} `}
+                      </p>
+                      <p className="text-xs text-gray-400">
+                        {formatScreeningDate(item.recorded_at).timeStr}
+                      </p>
                     </td>
 
-                    <td className="px-8 py-5 text-gray-700">{item.pressure}</td>
+                    <td className="px-8 py-5 text-gray-700">
+                      {item.blood_pressure}
+                    </td>
 
                     <td className="px-8 py-5">
                       <RiskBadge category={item.category} />
                     </td>
 
                     <td className="px-8 py-5 font-medium text-gray-700">
-                      {item.probability}
+                      {Math.round(parseFloat(item.probability) * 100)}%
                     </td>
 
                     <td className="px-8 py-5">
                       <Link
-                        to={`/screening/result/${item.id}`}
+                        to={`/screening/result/${item.screening_id}`}
                         className="rounded-xl border border-blue-200 px-4 py-2 text-sm font-semibold text-blue-700 hover:bg-blue-50"
                       >
                         Lihat Detail
@@ -133,8 +100,8 @@ export default function ScreeningHistoryPage() {
 
           <div className="flex items-center justify-between border-t border-gray-100 px-8 py-4">
             <p className="text-sm text-gray-500">
-              Menampilkan {filteredHistories.length} dari {histories.length}{' '}
-              data
+              Menampilkan {filteredHistories.length} dari{' '}
+              {historiesFromApi.length} data
             </p>
 
             <div className="flex gap-2">

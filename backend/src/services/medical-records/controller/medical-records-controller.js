@@ -77,7 +77,6 @@ export const addMedicalRecord = async (req, res, next) => {
 export const getHistoriesScreeningByUserId = async (req, res, next) => {
   try {
     const userId = req.user.id;
-
     const rawHistories =
       await medicalRecordsRepositories.historiesScreeningByUserId(userId);
 

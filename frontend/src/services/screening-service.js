@@ -13,3 +13,15 @@ export const exportScreeningResult = async (screeningId) => {
     responseType: 'blob',
   });
 };
+
+export const screeningSummary = async () => {
+  return await api.get(`/screening/summary`);
+};
+
+export const trendSummary = async (period = '30d') => {
+  return await api.get(`/screening/trend?period=${period}`);
+};
+
+export const historyScreening = async () => {
+  return await api.get(`/screening/histories`);
+};
