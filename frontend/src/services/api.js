@@ -69,7 +69,7 @@ api.interceptors.response.use(
 
       try {
         const res = await axios.put(
-          `${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/auth/refresh-token`,
+          `${import.meta.env.VITE_API_URL}/auth/refresh-token`,
           { refreshToken },
         );
         const newAccessToken = res.data.data.accessToken;
