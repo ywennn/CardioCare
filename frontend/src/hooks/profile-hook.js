@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { getMe, updateProfile, updatePassword } from '../services/user-service';
-
 export function useProfile() {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -15,21 +14,20 @@ export function useProfile() {
   const [passwordSuccess, setPasswordSuccess] = useState(false);
 
   useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const res = await getMe();
+        setProfile(res.data.data);
+      } catch (err) {
+        setError(err.response?.data?.message || 'Gagal memuat profil');
+      } finally {
+        setLoading(false);
+      }
+    };
     fetchProfile();
   }, []);
-
-  const fetchProfile = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const res = await getMe();
-      setProfile(res.data.data);
-    } catch (err) {
-      setError(err.response?.data?.message || 'Gagal memuat profil');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleUpdateProfile = async (data) => {
     try {
