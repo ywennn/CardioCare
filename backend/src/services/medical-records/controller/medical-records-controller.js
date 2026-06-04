@@ -323,8 +323,6 @@ export const exportScreeningPdf = async (req, res, next) => {
     const html = generatePdfHtml(data);
     const browser = await puppeteer.launch({
       args: ['--no-sandbox', '--disable-setuid-sandbox'],
-      executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || null,
-      headless: 'new',
     });
     const page = await browser.newPage();
     await page.setContent(html, { waitUntil: 'networkidle0' });
